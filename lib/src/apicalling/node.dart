@@ -163,6 +163,7 @@ class MapWay {
   }
 }
 
+
 class Tags {
   Tags({
     required this.activeTrafficManagement,
@@ -186,6 +187,16 @@ class Tags {
     required this.operatorwikipedia,
     required this.ref,
     required this.surface,
+    required this.addrcity,
+    required this.addrdistrict,
+    required this.addrhousenumber,
+    required this.addrprovince,
+    required this.addrstreet,
+    required this.addrsubdistrict,
+    required this.building,
+    required this.buildinglevels,
+    required this.height,
+    required this.name,
   });
   late final String? activeTrafficManagement;
   late final String? bicycle;
@@ -208,6 +219,16 @@ class Tags {
   late final String? operatorwikipedia;
   late final String? ref;
   late final String? surface;
+  late final String? addrcity;
+  late final String? addrdistrict;
+  late final String? addrhousenumber;
+  late final String? addrprovince;
+  late final String? addrstreet;
+  late final String? addrsubdistrict;
+  late final String? building;
+  late final String? buildinglevels;
+  late final String? height;
+  late final String? name;
 
   Tags.fromJson(Map<String, dynamic> json) {
     activeTrafficManagement = json['active_traffic_management'];
@@ -231,60 +252,6 @@ class Tags {
     operatorwikipedia = json['operator:wikipedia'];
     ref = json['ref'];
     surface = json['surface'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final _data = <String, dynamic>{};
-    _data['active_traffic_management'] = activeTrafficManagement;
-    _data['bicycle'] = bicycle;
-    _data['carriageway_ref'] = carriagewayRef;
-    _data['description'] = description;
-    _data['foot'] = foot;
-    _data['highway'] = highway;
-    _data['horse'] = horse;
-    _data['int_ref'] = intRef;
-    _data['lanes'] = lanes;
-    _data['lit'] = lit;
-    _data['maxspeed'] = maxspeed;
-    _data['maxspeed:type'] = maxspeedtype;
-    _data['maxspeed:variable'] = maxspeedvariable;
-    _data['motor_vehicle'] = motorVehicle;
-    _data['national_highways:area'] = nationalHighwaysarea;
-    _data['oneway'] = oneway;
-    _data['operator'] = operator;
-    _data['operator:wikidata'] = operatorwikidata;
-    _data['operator:wikipedia'] = operatorwikipedia;
-    _data['ref'] = ref;
-    _data['surface'] = surface;
-    return _data;
-  }
-}
-
-class Uid {
-  Uid({
-    required this.addrcity,
-    required this.addrdistrict,
-    required this.addrhousenumber,
-    required this.addrprovince,
-    required this.addrstreet,
-    required this.addrsubdistrict,
-    required this.building,
-    required this.buildinglevels,
-    required this.height,
-    required this.name,
-  });
-  late final String addrcity;
-  late final String addrdistrict;
-  late final String addrhousenumber;
-  late final String addrprovince;
-  late final String addrstreet;
-  late final String addrsubdistrict;
-  late final String building;
-  late final String buildinglevels;
-  late final String height;
-  late final String name;
-
-  Uid.fromJson(Map<String, dynamic> json) {
     addrcity = json['addr:city'];
     addrdistrict = json['addr:district'];
     addrhousenumber = json['addr:housenumber'];
