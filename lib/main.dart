@@ -118,25 +118,21 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         },
         child: const Icon(Icons.my_location),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+      body: Stack(
+        children: [
 
-             const SearchingBar(),
-                Expanded(
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                        target: LatLng(latitude, longtitude), zoom: 11.5),
-                    zoomGesturesEnabled: true,
-                    zoomControlsEnabled: true,
-                    markers: _marker,
-                    onMapCreated: (GoogleMapController controller) {
-                      return _controller.complete(controller);
-                    },
-                  ),
-                )
-          ],
-        ),
+              GoogleMap(
+                initialCameraPosition: CameraPosition(
+                    target: LatLng(latitude, longtitude), zoom: 11.5),
+                zoomGesturesEnabled: true,
+                zoomControlsEnabled: true,
+                markers: _marker,
+                onMapCreated: (GoogleMapController controller) {
+                  return _controller.complete(controller);
+                },
+              ),
+          Card(child: SearchingBar()),
+        ],
       ),
     );
   }

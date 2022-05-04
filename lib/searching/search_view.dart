@@ -21,76 +21,86 @@ class SearchingBar extends StatelessWidget {
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
         bool openCloseup = ref.watch(openCloseupListProvider);
         var searchingObject = ref.watch(SearchingObjectProvider);
-        return Form(child: Column(
-          children: [
-            TextFormField(
-              controller: _presentLocationController,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-              ),
-              onChanged: (String str){
-                Future.delayed(const Duration(milliseconds: 500),(){
-                  if(str.isEmpty){
-                    ref.read(openCloseupListProvider.state).update((state) => false);
-                  }else{
-                    ref.read(openCloseupListProvider.state).update((state) => true);
-
-                  }
-                });
-              },
-            ),
-            // openCloseup?Expanded(child: ListView.builder(
-            //   itemCount: searchingObject.features.length,
-            //   itemBuilder: (context, index) {
-            //     var checkType = searchingObject.features[index];
-            //       if(checkType is PlaceObject){
-            //         return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-            //       }else if(checkType is PositionObject){
-            //         return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-            //       }else{
-            //         return  ListTile(title: const Text('NaN'),);
-            //       }
-            // },)):const SizedBox(),
-            TextFormField(
-              controller: _wannagoLocationController,
-              decoration: InputDecoration(
+        return Form(child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _presentLocationController,
+                decoration: const InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Search some where',
-                  suffixIcon: IconButton(onPressed: (){
-                    SearchingClient(Dio()).fetchToGetSearchingObject('Hanoi', accessToken).then((value) {
-                      Logger().e(value.features.length);
-                    });
+                ),
+                onChanged: (String str){
+                  Future.delayed(const Duration(milliseconds: 500),(){
+                    if(str.isEmpty){
+                      ref.read(openCloseupListProvider.state).update((state) => false);
+                    }else{
+                      ref.read(openCloseupListProvider.state).update((state) => true);
 
-                  }, icon: const Icon(Icons.search))
+                    }
+                  });
+                },
               ),
-              onChanged: (String str){
-                Future.delayed(const Duration(milliseconds: 500),(){
-                  if(str.isEmpty){
-                    ref.read(openCloseupListProvider.state).update((state) => false);
-                  }else{
-                    ref.read(openCloseupListProvider.state).update((state) => true);
+              // openCloseup?Expanded(child: ListView.builder(
+              //   itemCount: searchingObject.features.length,
+              //   itemBuilder: (context, index) {
+              //     var checkType = searchingObject.features[index];
+              //       if(checkType is PlaceObject){
+              //         return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
+              //       }else if(checkType is PositionObject){
+              //         return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
+              //       }else{
+              //         return  ListTile(title: const Text('NaN'),);
+              //       }
+              // },)):const SizedBox(),
+              TextFormField(
+                controller: _wannagoLocationController,
+                decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Search some where',
+                    suffixIcon: IconButton(onPressed: (){
+                      SearchingClient(Dio()).fetchToGetSearchingObject('Hanoi', accessToken).then((value) {
+                       for(final ele in value.features){
+                         Logger().e(ele.runtimeType);
+                       }
+                      });
+                      ref.read(SearchingObjectProvider.notifier).getSearchingObject(_wannagoLocationController.text);
 
-                  }
-                });
-              },
-            ),
-            openCloseup?Container(
-              height: 350,
-              child: ListView.builder(
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  // var checkType = searchingObject.features[index];
-                  // if(checkType is PlaceObject){
-                  //   return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-                  // }else if(checkType is PositionObject){
-                  //   return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-                  // }else{
-                  //   return  ListTile(title: const Text('NaN'),);
-                  // }
-                  return  ListTile(title: const Text('NaN'),);
-                },),
-            ):const SizedBox(),
-          ],
+                    }, icon: const Icon(Icons.search))
+                ),
+                onChanged: (String str){
+                  Future.delayed(const Duration(milliseconds: 500),(){
+                    if(str.isEmpty){
+                      ref.read(openCloseupListProvider.state).update((state) => false);
+                    }else{
+                      ref.read(openCloseupListProvider.state).update((state) => true);
+
+                    }
+                  });
+                },
+              ),
+              openCloseup?Flexible(
+                fit: FlexFit.loose,
+                child: SizedBox(
+                  height: 350,
+                  child: ListView.builder(
+                    itemCount: searchingObject.features.length,
+                    itemBuilder: (context, index) {
+                      var checkType = searchingObject.features[index];
+                      if(checkType is PlaceObject){
+                        return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
+                      }else if(checkType is PositionObject){
+                        return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
+                      }else{
+                        return  ListTile(title: const Text('NaN'),);
+                      }
+                      return  ListTile(title: const Text('NaN'),);
+                    },),
+                ),
+              ):const SizedBox(),
+            ],
+          ),
         ));
       },
     );
