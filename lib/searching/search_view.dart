@@ -18,7 +18,8 @@ class SearchingBar extends StatelessWidget {
     _presentLocationController.text = 'Your Location';
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        bool openCloseup = ref.watch(openCloseupListProvider);
+        bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
+        bool openCloseCurrentLo = ref.watch(openCloseupListCurrentStartProvider);
         var searchingObject = ref.watch(SearchingObjectProvider);
         return Form(child: SingleChildScrollView(
           child: Column(
@@ -26,21 +27,47 @@ class SearchingBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+
                 controller: _presentLocationController,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
+
                 ),
+                onTap: (){
+                  ref.read(openCloseupListWannaGoProvider.state).update((state) => false);
+                },
                 onChanged: (String str){
                   Future.delayed(const Duration(milliseconds: 500),(){
                     if(str.isEmpty){
-                      ref.read(openCloseupListProvider.state).update((state) => false);
+                      ref.read(openCloseupListCurrentStartProvider.state).update((state) => false);
                     }else{
-                      ref.read(openCloseupListProvider.state).update((state) => true);
-
+                      ref.read(openCloseupListCurrentStartProvider.state).update((state) => true);
+                      ref.read(SearchingObjectProvider.notifier).getSearchingObject(str);
                     }
                   });
                 },
               ),
+              openCloseCurrentLo?Flexible(
+                fit: FlexFit.loose,
+                child: SizedBox(
+                  height: 350,
+                  child: ListView.builder(
+                    itemCount: searchingObject.features.length,
+                    itemBuilder: (context, index) {
+                      return  ListTile(
+                        onTap: (){
+                          ref.read(openCloseupListCurrentStartProvider.state).update((state) => false);
+                          _presentLocationController.text = searchingObject.features[index].text!;
+                        },
+                        title:  Text(searchingObject.features[index].text??'Unknow'),
+                        subtitle: Text(searchingObject.features[index].placeName??'Unknown',
+
+                        ),
+                      );
+
+                    },),
+                ),
+              ):const SizedBox(),
               // openCloseup?Expanded(child: ListView.builder(
               //   itemCount: searchingObject.features.length,
               //   itemBuilder: (context, index) {
@@ -55,25 +82,15 @@ class SearchingBar extends StatelessWidget {
               // },)):const SizedBox(),
               TextFormField(
                 controller: _wannagoLocationController,
+                onTap: (){
+                  ref.read(openCloseupListCurrentStartProvider.state).update((state) => false);
+                },
                 decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: 'Search some where',
                     suffixIcon: IconButton(onPressed: (){
                       print('Hello word');
-                      // SearchingClient(Dio()).fetchToGetSearchingObject('Hanoi', accessToken).then((value) {
-                      //  print(value.features.length);
-                      // }).catchError((Object obj) {
-                      //   // non-200 error goes here.
-                      //   switch (obj.runtimeType) {
-                      //     case DioError:
-                      //     // Here's the sample to get the failed response error code and message
-                      //       final res = (obj as DioError).response;
-                      //       Logger().e("Got error : ${res!.statusCode} -> ${res.statusMessage}");
-                      //       break;
-                      //     default:
-                      //       break;
-                      //   }
-                      // });
+
                       ref.read(SearchingObjectProvider.notifier).getSearchingObject(_wannagoLocationController.text);
 
                     }, icon: const Icon(Icons.search))
@@ -81,25 +98,28 @@ class SearchingBar extends StatelessWidget {
                 onChanged: (String str){
                   Future.delayed(const Duration(milliseconds: 500),(){
                     if(str.isEmpty){
-                      ref.read(openCloseupListProvider.state).update((state) => false);
+                      ref.read(openCloseupListWannaGoProvider.state).update((state) => false);
                     }else{
-                      ref.read(openCloseupListProvider.state).update((state) => true);
-
+                      ref.read(openCloseupListWannaGoProvider.state).update((state) => true);
                     }
                   });
                 },
               ),
-              openCloseup?Flexible(
+              openCloseWannaGo?Flexible(
                 fit: FlexFit.loose,
                 child: SizedBox(
                   height: 350,
                   child: ListView.builder(
                     itemCount: searchingObject.features.length,
                     itemBuilder: (context, index) {
-                      var checkType = searchingObject.features[index];
-
-                        return  ListTile(title:  Text(searchingObject.features[index].text??'Unknow'),
-                                    subtitle: Text(searchingObject.features[index].placeName??'Unknown'),
+                        return  ListTile(
+                          onTap: (){
+                            ref.read(openCloseupListWannaGoProvider.state).update((state) => false);
+                            _wannagoLocationController.text = searchingObject.features[index].text!;
+                          },
+                          title:  Text(searchingObject.features[index].text??'Unknow'),
+                                    subtitle: Text(searchingObject.features[index].placeName??'Unknown',
+                                    ),
                         );
 
                     },),
