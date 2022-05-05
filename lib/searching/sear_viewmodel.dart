@@ -9,7 +9,7 @@ final openCloseupListProvider = StateProvider(
 );
 
 class SearchingNotifier extends StateNotifier<SearchingObject> {
-  SearchingNotifier() : super(SearchingObject('', [], [], ''));
+  SearchingNotifier() : super(SearchingObject(type: '', query: [], attribution: '', features: []));
 
   void getSearchingObject(String location) async {
     SearchingClient(Dio())

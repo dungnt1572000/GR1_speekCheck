@@ -1,7 +1,6 @@
 
 import 'package:doan1/constant/accessTokenTest.dart';
 import 'package:doan1/searching/sear_viewmodel.dart';
-import 'package:doan1/src/searching_service/searching_object.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,11 +59,21 @@ class SearchingBar extends StatelessWidget {
                     border: InputBorder.none,
                     hintText: 'Search some where',
                     suffixIcon: IconButton(onPressed: (){
-                      SearchingClient(Dio()).fetchToGetSearchingObject('Hanoi', accessToken).then((value) {
-                       for(final ele in value.features){
-                         Logger().e(ele.runtimeType);
-                       }
-                      });
+                      print('Hello word');
+                      // SearchingClient(Dio()).fetchToGetSearchingObject('Hanoi', accessToken).then((value) {
+                      //  print(value.features.length);
+                      // }).catchError((Object obj) {
+                      //   // non-200 error goes here.
+                      //   switch (obj.runtimeType) {
+                      //     case DioError:
+                      //     // Here's the sample to get the failed response error code and message
+                      //       final res = (obj as DioError).response;
+                      //       Logger().e("Got error : ${res!.statusCode} -> ${res.statusMessage}");
+                      //       break;
+                      //     default:
+                      //       break;
+                      //   }
+                      // });
                       ref.read(SearchingObjectProvider.notifier).getSearchingObject(_wannagoLocationController.text);
 
                     }, icon: const Icon(Icons.search))
@@ -88,14 +97,11 @@ class SearchingBar extends StatelessWidget {
                     itemCount: searchingObject.features.length,
                     itemBuilder: (context, index) {
                       var checkType = searchingObject.features[index];
-                      if(checkType is PlaceObject){
-                        return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-                      }else if(checkType is PositionObject){
-                        return ListTile(title: Text(checkType.text),subtitle: Text(checkType.placeName),);
-                      }else{
-                        return  ListTile(title: const Text('NaN'),);
-                      }
-                      return  ListTile(title: const Text('NaN'),);
+
+                        return  ListTile(title:  Text(searchingObject.features[index].text??'Unknow'),
+                                    subtitle: Text(searchingObject.features[index].placeName??'Unknown'),
+                        );
+
                     },),
                 ),
               ):const SizedBox(),
