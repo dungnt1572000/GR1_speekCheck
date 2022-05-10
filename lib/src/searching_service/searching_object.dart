@@ -50,7 +50,7 @@ class Feature {
   String? id;
   String? type;
   List<String>? placeType;
-  int? relevance;
+  num? relevance;
   Properties? properties;
   String? text;
   String? placeName;
@@ -91,16 +91,16 @@ class Context {
 
   factory Context.fromJson(Map<String, dynamic> json) => Context(
     id: json["id"],
-    wikidata: json["wikidata"] == null ? null : json["wikidata"],
+    wikidata: json["wikidata"],
     text: json["text"],
-    shortCode: json["short_code"] == null ? null : json["short_code"],
+    shortCode: json["short_code"],
   );
 
   Map<String, dynamic> toJson() => {
     "id": id,
-    "wikidata": wikidata == null ? null : wikidata,
+    "wikidata": wikidata,
     "text": text,
-    "short_code": shortCode == null ? null : shortCode,
+    "short_code": shortCode,
   };
 }
 
@@ -110,8 +110,8 @@ class Geometry {
     required this.coordinates,
   });
 
-  String? type;
-  List<double>? coordinates;
+  String type;
+  List<double> coordinates;
 
   factory Geometry.fromJson(Map<String, dynamic> json) => Geometry(
     type: json["type"],
@@ -139,20 +139,20 @@ class Properties {
   String? maki;
 
   factory Properties.fromJson(Map<String, dynamic> json) => Properties(
-    wikidata: json["wikidata"] == null ? null : json["wikidata"],
-    foursquare: json["foursquare"] == null ? null : json["foursquare"],
-    landmark: json["landmark"] == null ? null : json["landmark"],
-    address: json["address"] == null ? null : json["address"],
-    category: json["category"] == null ? null : json["category"],
-    maki: json["maki"] == null ? null : json["maki"],
+    wikidata: json["wikidata"],
+    foursquare: json["foursquare"],
+    landmark: json["landmark"],
+    address: json["address"],
+    category: json["category"],
+    maki: json["maki"],
   );
 
   Map<String, dynamic> toJson() => {
-    "wikidata": wikidata == null ? null : wikidata,
-    "foursquare": foursquare == null ? null : foursquare,
-    "landmark": landmark == null ? null : landmark,
-    "address": address == null ? null : address,
-    "category": category == null ? null : category,
-    "maki": maki == null ? null : maki,
+    "wikidata": wikidata,
+    "foursquare": foursquare,
+    "landmark": landmark,
+    "address": address,
+    "category": category,
+    "maki": maki,
   };
 }

@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:doan1/main_viewmodel.dart';
-import 'package:doan1/searching/search_view.dart';
+import 'package:doan1/searching/sear_viewmodel.dart';
+import 'package:doan1/src/direction_service/api_direction_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:logger/logger.dart';
+import 'package:dio/dio.dart';
 
+import 'constant/accessTokenTest.dart';
 void main() => runApp(const ProviderScope(child: const MyApp()));
 
 class MyApp extends StatelessWidget {
@@ -20,6 +24,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+Completer<GoogleMapController> _controller = Completer();
+
 class MyHomePage extends ConsumerStatefulWidget {
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -29,7 +35,8 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
-  final Completer<GoogleMapController> _controller = Completer();
+  final TextEditingController _presentLocationController = TextEditingController();
+  final TextEditingController _wannagoLocationController = TextEditingController();
 
   @override
   void initState() {
@@ -46,18 +53,17 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    bool openClose = ref.watch(openCloseMenuProvider);
+
     double latitude = ref.watch(latetitudeProvider);
     double longtitude = ref.watch(longtitudeProvider);
-    var mapNote = ref.watch(noteProvider);
-    var mapListNode = ref.watch(markerNodeProvider);
-    var mapListWay = ref.watch(markerWayProvider);
+
     Location location = Location();
 
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
     LocationData _locationData;
-    Set<Marker> _marker = ref.watch(markerProvider);
+    List<Marker> _marker = ref.watch(markerProvider);
+    bool UIcheckfindProvider = ref.watch(findOptionProvider);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -79,9 +85,6 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           }
 
           _locationData = await location.getLocation();
-          print(_locationData.latitude);
-
-          print(_locationData.longitude);
 
           ref
               .read(latetitudeProvider.state)
@@ -89,9 +92,6 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
           ref
               .read(longtitudeProvider.state)
               .update((state) => state = _locationData.longitude ?? 105.84117);
-          print(latitude);
-
-          print(longtitude);
 
           final GoogleMapController controller = await _controller.future;
           controller
@@ -99,44 +99,216 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             target: LatLng(_locationData.latitude!, _locationData.longitude!),
             zoom: 11.15,
           )));
-          // _marker.add();
-          // for (final marker in mapListNode) {
-          //   _marker.add(Marker(
-          //       markerId: MarkerId(marker.id.toString()),
-          //       position: LatLng(marker.lat, marker.lon),
-          //       icon: ,
-          //       infoWindow: InfoWindow(title: 'added by ${marker.user}')));
-          // }
-
-          ref.read(markerProvider).add(Marker(
-              markerId: const MarkerId('currentId'),
-              infoWindow: const InfoWindow(title: 'current location',),
-              
-              position:
-                  LatLng(_locationData.latitude!, _locationData.longitude!),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose)));
         },
         child: const Icon(Icons.my_location),
       ),
-      body: Stack(
-        children: [
-
-              GoogleMap(
-                initialCameraPosition: CameraPosition(
-                    target: LatLng(latitude, longtitude), zoom: 11.5),
-                zoomGesturesEnabled: true,
-                zoomControlsEnabled: true,
-                markers: _marker,
-                onMapCreated: (GoogleMapController controller) {
-                  return _controller.complete(controller);
-                },
-              ),
-          Container(
-              padding: EdgeInsets.only(top: 32),
-              color: Colors.white,
-              child: const SearchingBar()),
-        ],
+      body: SafeArea(
+        child: Stack(
+          children: [
+            GoogleMap(
+              myLocationButtonEnabled: false,
+              myLocationEnabled: true,
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(latitude, longtitude), zoom: 11.5),
+              zoomGesturesEnabled: true,
+              zoomControlsEnabled: true,
+              markers: Set.of(_marker),
+              onMapCreated: (GoogleMapController controller) {
+                return _controller.complete(controller);
+              },
+              onTap: _handleTap,
+            ),
+            UIcheckfindProvider? ElevatedButton(style: ElevatedButton.styleFrom(primary: Colors.white),onPressed: (){
+            ref.read(findOptionProvider.state).update((state) => !state);
+            },child:const Icon(Icons.keyboard_arrow_down,color: Colors.blue,)):_buildSearchingBar()
+          ],
+        ),
       ),
+    );
+
+  }
+  _handleTap(LatLng latln){
+    var _listmarker = ref.watch(markerProvider);
+    if(_listmarker.length<2){
+      ref.read(markerProvider.notifier).addMarker(Marker(markerId: MarkerId(latln.toString()),position: latln));
+      Logger().w(latln.toString());
+    }
+    else{
+      ref.read(markerProvider.notifier).deleteAllMarker();
+    }
+  }
+  Widget _buildSearchingBar(){
+
+    bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
+    bool openCloseCurrentLo =
+    ref.watch(openCloseupListCurrentStartProvider);
+    var searchingObject = ref.watch(SearchingObjectProvider);
+    var _listmarker = ref.watch(markerProvider);
+    return Container(
+      padding: const EdgeInsets.only(top: 32),
+      color: Colors.white,
+      child: Form(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _presentLocationController,
+                  decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Your Location',
+                      suffixIcon: IconButton(
+                          onPressed: () {
+                            ref
+                                .read(SearchingObjectProvider.notifier)
+                                .getSearchingObject(
+                                _presentLocationController.text);
+                            ref
+                                .read(openCloseupListCurrentStartProvider.state)
+                                .update((state) => true);
+                          },
+                          icon: const Icon(Icons.search))),
+                  onTap: () {
+                    ref
+                        .read(openCloseupListWannaGoProvider.state)
+                        .update((state) => false);
+                  },
+                  onChanged: (str){
+                    if(str.isEmpty){
+                      ref
+                          .read(openCloseupListCurrentStartProvider.state)
+                          .update((state) => false);
+                    }
+                  },
+                ),
+                openCloseCurrentLo
+                    ? Flexible(
+                  fit: FlexFit.loose,
+                  child: SizedBox(
+                    height: 350,
+                    child: ListView.builder(
+                      itemCount: searchingObject.features.length,
+                      itemBuilder: (context, index) {
+                        if (searchingObject.features.isEmpty) {
+                          return const Text('We cant found this!');
+                        }
+                        else {
+                          var obj = searchingObject.features[index];
+                          return ListTile(
+                            onTap: () async {
+                              ref
+                                  .read(openCloseupListCurrentStartProvider
+                                  .state)
+                                  .update((state) => false);
+                              _presentLocationController.text =
+                              searchingObject.features[index].text!;
+
+                              final GoogleMapController controller = await _controller.future;
+                              controller
+                                  .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+                                target: LatLng(obj.center![1], obj.center![0]),
+                                zoom: 16,
+                              )));
+                              Logger().e('Chay hay ko');
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pick up your Location')));
+                            },
+                            title: Text(
+                                searchingObject.features[index].text ??
+                                    'Unknow'),
+                            subtitle: Text(
+                              searchingObject.features[index].placeName ??
+                                  'Unknown',
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                )
+                    : const SizedBox(),
+                TextFormField(
+                  controller: _wannagoLocationController,
+                  onTap: ()  {
+
+                    ref
+                        .read(openCloseupListCurrentStartProvider.state)
+                        .update((state) => false);
+                  },
+                  decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Search some where',
+                      suffixIcon: IconButton(
+                          onPressed: () {
+                            ref
+                                .read(openCloseupListWannaGoProvider.state)
+                                .update((state) => true);
+                            ref
+                                .read(SearchingObjectProvider.notifier)
+                                .getSearchingObject(
+                                _wannagoLocationController.text);
+                          },
+                          icon: const Icon(Icons.search))),
+                  onChanged: (str){
+                    if(str.isEmpty){
+                      ref
+                          .read(openCloseupListWannaGoProvider.state)
+                          .update((state) => false);
+                    }
+                  },
+
+                ),
+                openCloseWannaGo
+                    ? Flexible(
+                  fit: FlexFit.loose,
+                  child: SizedBox(
+                    height: 350,
+                    child: ListView.builder(
+                      itemCount: searchingObject.features.length,
+                      itemBuilder: (context, index) {
+                        var obj = searchingObject.features[index];
+                        return ListTile(
+                          onTap: () async {
+                            ref
+                                .read(openCloseupListWannaGoProvider.state)
+                                .update((state) => false);
+                            _wannagoLocationController.text =
+                            searchingObject.features[index].text!;
+                            final GoogleMapController controller = await _controller.future;
+                            controller
+                                .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+                              target: LatLng(obj.center![1], obj.center![0]),
+                              zoom: 16,
+                            )));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pick up your destinations')));
+                          },
+                          title: Text(
+                              searchingObject.features[index].text ??
+                                  'Unknow'),
+                          subtitle: Text(
+                            searchingObject.features[index].placeName ??
+                                'Unknown',
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                )
+                    : const SizedBox(),
+                TextButton(onPressed: (){
+                  ref.read(findOptionProvider.state).update((state) => !state);
+                  DirectionsClient(Dio())
+                      .getDirection('-122.39636,37.79129;-122.39732,37.79283;-122.39606,37.79349', accessToken, 'maxspeed', 'geojson', 'full')
+                      .then((value) {
+                        var listGeometry = value.routes[0].geometry.coordinates;
+                        for(final i in listGeometry){
+                          // ref.read(markerProvider.notifier).addMarker(Marker(markerId: MarkerId('${i[0]+i[1]}'),position: LatLng))
+                        }
+                  });
+                }, child: Text('Find'))
+              ],
+            ),
+          )),
     );
   }
 }

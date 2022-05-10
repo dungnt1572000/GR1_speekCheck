@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:doan1/constant/accessTokenTest.dart';
 import 'package:doan1/src/apicalling/api_client.dart';
 import 'package:doan1/src/apicalling/node.dart';
+import 'package:doan1/src/direction_service/api_direction_client.dart';
+import 'package:doan1/src/direction_service/direction_object.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:logger/logger.dart';
 
 final latetitudeProvider = StateProvider(
-  (ref) =>10.762622,
+  (ref) => 10.762622,
 );
 
 final longtitudeProvider = StateProvider(
@@ -18,7 +21,14 @@ final speedProvider = StateProvider(
 final openCloseMenuProvider = StateProvider(
   (ref) => true,
 );
-final zoomProvider = StateProvider((ref) => 13,);
+final zoomProvider = StateProvider(
+  (ref) => 13,
+);
+
+final findOptionProvider = StateProvider(
+  (ref) => false,
+);
+
 class NodeStateNotifier extends StateNotifier<Node> {
   NodeStateNotifier(state) : super(state);
 
@@ -26,14 +36,6 @@ class NodeStateNotifier extends StateNotifier<Node> {
     state = await RestClient(Dio()).fetchToGetNotes(
         'Basic ZHVuZ3BybzE1NzJrQGdtYWlsLmNvbTpuZ3V5ZW50YW5kdW5ncHJvMTU3MjAwMA==',
         coordinate);
-    //long + 0.00011
-    // late + 0.005
-    Logger().e(state.elements.length);
-    Logger().d(coordinate);
-
-    // for(int i=0 ; i< state.elements.length ; i++){
-    //   print(state.elements[i].runtimeType);
-    // }
   }
 }
 
@@ -64,14 +66,44 @@ final markerWayProvider = Provider<List<MapWay>>(
   },
 );
 
-class MarkerNotifier extends StateNotifier<Set<Marker>>{
-  MarkerNotifier([Set<Marker>? state]) : super(state??{});
-  void addMarker(Marker marker){
-    state ={...state,marker};
+class MarkerNotifier extends StateNotifier<List<Marker>> {
+  MarkerNotifier(List<Marker> state) : super(state);
+
+  void addMarker(Marker marker) {
+    state = [...state, marker];
+    print(state.length);
+  }
+  void addAllMarker(List<Marker> listMarker){
+    state = listMarker;
+  }
+
+  void deleteMarker(LatLng latLng) {
+    state = state
+        .where((element) =>
+            element.position.longitude != latLng.longitude &&
+            element.position.latitude != latLng.latitude)
+        .toList();
+  }
+
+  void deleteAllMarker() {
+    state = [];
   }
 }
-final markerProvider = StateNotifierProvider<MarkerNotifier,Set<Marker>>((ref) {
-  return MarkerNotifier({});
-},);
 
+final markerProvider = StateNotifierProvider<MarkerNotifier, List<Marker>>(
+  (ref) {
+    return MarkerNotifier([]);
+  },
+);
 
+class DirectionNotifier extends StateNotifier<DirectionObject> {
+  DirectionNotifier({required DirectionObject state}) : super(state);
+
+  void getDirectionObj() async {
+    DirectionsClient(Dio())
+        .getDirection('-122.39636,37.79129;-122.39732,37.79283;-122.39606,37.79349', accessToken, 'maxspeed', 'geojson', 'full')
+        .then((value) {
+      Logger().w(value.code);
+    });
+  }
+}
