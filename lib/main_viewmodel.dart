@@ -70,6 +70,9 @@ class MarkerNotifier extends StateNotifier<List<Marker>> {
   MarkerNotifier(List<Marker> state) : super(state);
 
   void addMarker(Marker marker) {
+    if(state.length>2){
+      state=[];
+    }
     state = [...state, marker];
     print(state.length);
   }
@@ -97,13 +100,15 @@ final markerProvider = StateNotifierProvider<MarkerNotifier, List<Marker>>(
 );
 
 class DirectionNotifier extends StateNotifier<DirectionObject> {
-  DirectionNotifier({required DirectionObject state}) : super(state);
+  DirectionNotifier( DirectionObject state) : super(state);
 
-  void getDirectionObj() async {
+  void getDirectionObj(String distance) async {
     DirectionsClient(Dio())
-        .getDirection('-122.39636,37.79129;-122.39732,37.79283;-122.39606,37.79349', accessToken, 'maxspeed', 'geojson', 'full')
+        .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
-      Logger().w(value.code);
+        Logger().i(value.routes.length);
     });
   }
 }
+
+final directionsProvider = StateNotifierProvider<DirectionNotifier,DirectionObject>((ref) => DirectionNotifier(DirectionObject(uuid: '', waypoints: [], routes: [], code: '')));

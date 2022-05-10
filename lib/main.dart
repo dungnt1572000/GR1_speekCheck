@@ -2,15 +2,13 @@ import 'dart:async';
 
 import 'package:doan1/main_viewmodel.dart';
 import 'package:doan1/searching/sear_viewmodel.dart';
-import 'package:doan1/src/direction_service/api_direction_client.dart';
+import 'package:doan1/src/direction_service/direction_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:logger/logger.dart';
-import 'package:dio/dio.dart';
 
-import 'constant/accessTokenTest.dart';
 void main() => runApp(const ProviderScope(child: const MyApp()));
 
 class MyApp extends StatelessWidget {
@@ -35,8 +33,10 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
-  final TextEditingController _presentLocationController = TextEditingController();
-  final TextEditingController _wannagoLocationController = TextEditingController();
+  final TextEditingController _presentLocationController =
+      TextEditingController();
+  final TextEditingController _wannagoLocationController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -64,7 +64,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     LocationData _locationData;
     List<Marker> _marker = ref.watch(markerProvider);
     bool UIcheckfindProvider = ref.watch(findOptionProvider);
-
+    DirectionObject directionsObject = ref.watch(directionsProvider);
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -117,31 +117,49 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                 return _controller.complete(controller);
               },
               onTap: _handleTap,
+              polylines: {
+                if (directionsObject.routes.isNotEmpty)
+                  Polyline(
+                      polylineId:
+                          PolylineId(directionsObject.routes[0].weightName),
+                      points: directionsObject.routes[0].geometry.coordinates
+                          .map((e) => LatLng(e[0], e[1]))
+                          .toList())
+              },
             ),
-            UIcheckfindProvider? ElevatedButton(style: ElevatedButton.styleFrom(primary: Colors.white),onPressed: (){
-            ref.read(findOptionProvider.state).update((state) => !state);
-            },child:const Icon(Icons.keyboard_arrow_down,color: Colors.blue,)):_buildSearchingBar()
+            UIcheckfindProvider
+                ? ElevatedButton(
+                    style: ElevatedButton.styleFrom(primary: Colors.white),
+                    onPressed: () {
+                      ref
+                          .read(findOptionProvider.state)
+                          .update((state) => !state);
+                    },
+                    child: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.blue,
+                    ))
+                : _buildSearchingBar()
           ],
         ),
       ),
     );
-
   }
-  _handleTap(LatLng latln){
+
+  _handleTap(LatLng latln) {
     var _listmarker = ref.watch(markerProvider);
-    if(_listmarker.length<2){
-      ref.read(markerProvider.notifier).addMarker(Marker(markerId: MarkerId(latln.toString()),position: latln));
+    if (_listmarker.length < 2) {
+      ref.read(markerProvider.notifier).addMarker(
+          Marker(markerId: MarkerId(latln.toString()), position: latln));
       Logger().w(latln.toString());
-    }
-    else{
+    } else {
       ref.read(markerProvider.notifier).deleteAllMarker();
     }
   }
-  Widget _buildSearchingBar(){
 
+  Widget _buildSearchingBar() {
     bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
-    bool openCloseCurrentLo =
-    ref.watch(openCloseupListCurrentStartProvider);
+    bool openCloseCurrentLo = ref.watch(openCloseupListCurrentStartProvider);
     var searchingObject = ref.watch(SearchingObjectProvider);
     var _listmarker = ref.watch(markerProvider);
     return Container(
@@ -149,166 +167,180 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       color: Colors.white,
       child: Form(
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _presentLocationController,
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Your Location',
-                      suffixIcon: IconButton(
-                          onPressed: () {
-                            ref
-                                .read(SearchingObjectProvider.notifier)
-                                .getSearchingObject(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _presentLocationController,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Your Location',
+                  suffixIcon: IconButton(
+                      onPressed: () {
+                        ref
+                            .read(SearchingObjectProvider.notifier)
+                            .getSearchingObject(
                                 _presentLocationController.text);
-                            ref
-                                .read(openCloseupListCurrentStartProvider.state)
-                                .update((state) => true);
-                          },
-                          icon: const Icon(Icons.search))),
-                  onTap: () {
-                    ref
-                        .read(openCloseupListWannaGoProvider.state)
-                        .update((state) => false);
-                  },
-                  onChanged: (str){
-                    if(str.isEmpty){
-                      ref
-                          .read(openCloseupListCurrentStartProvider.state)
-                          .update((state) => false);
-                    }
-                  },
-                ),
-                openCloseCurrentLo
-                    ? Flexible(
-                  fit: FlexFit.loose,
-                  child: SizedBox(
-                    height: 350,
-                    child: ListView.builder(
-                      itemCount: searchingObject.features.length,
-                      itemBuilder: (context, index) {
-                        if (searchingObject.features.isEmpty) {
-                          return const Text('We cant found this!');
-                        }
-                        else {
+                        ref
+                            .read(openCloseupListCurrentStartProvider.state)
+                            .update((state) => true);
+                      },
+                      icon: const Icon(Icons.search))),
+              onTap: () {
+                ref
+                    .read(openCloseupListWannaGoProvider.state)
+                    .update((state) => false);
+              },
+              onChanged: (str) {
+                if (str.isEmpty) {
+                  ref
+                      .read(openCloseupListCurrentStartProvider.state)
+                      .update((state) => false);
+                }
+              },
+            ),
+            openCloseCurrentLo
+                ? Flexible(
+                    fit: FlexFit.loose,
+                    child: SizedBox(
+                      height: 350,
+                      child: ListView.builder(
+                        itemCount: searchingObject.features.length,
+                        itemBuilder: (context, index) {
+                          if (searchingObject.features.isEmpty) {
+                            return const Text('We cant found this!');
+                          } else {
+                            var obj = searchingObject.features[index];
+                            return ListTile(
+                              onTap: () async {
+                                ref
+                                    .read(openCloseupListCurrentStartProvider
+                                        .state)
+                                    .update((state) => false);
+                                _presentLocationController.text =
+                                    searchingObject.features[index].text!;
+
+                                final GoogleMapController controller =
+                                    await _controller.future;
+                                controller.animateCamera(
+                                    CameraUpdate.newCameraPosition(
+                                        CameraPosition(
+                                  target:
+                                      LatLng(obj.center![1], obj.center![0]),
+                                  zoom: 16,
+                                )));
+                                Logger().e('Chay hay ko');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Pick up your Location')));
+                              },
+                              title: Text(
+                                  searchingObject.features[index].text ??
+                                      'Unknow'),
+                              subtitle: Text(
+                                searchingObject.features[index].placeName ??
+                                    'Unknown',
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
+            TextFormField(
+              controller: _wannagoLocationController,
+              onTap: () {
+                ref
+                    .read(openCloseupListCurrentStartProvider.state)
+                    .update((state) => false);
+              },
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Search some where',
+                  suffixIcon: IconButton(
+                      onPressed: () {
+                        ref
+                            .read(openCloseupListWannaGoProvider.state)
+                            .update((state) => true);
+                        ref
+                            .read(SearchingObjectProvider.notifier)
+                            .getSearchingObject(
+                                _wannagoLocationController.text);
+                      },
+                      icon: const Icon(Icons.search))),
+              onChanged: (str) {
+                if (str.isEmpty) {
+                  ref
+                      .read(openCloseupListWannaGoProvider.state)
+                      .update((state) => false);
+                }
+              },
+            ),
+            openCloseWannaGo
+                ? Flexible(
+                    fit: FlexFit.loose,
+                    child: SizedBox(
+                      height: 350,
+                      child: ListView.builder(
+                        itemCount: searchingObject.features.length,
+                        itemBuilder: (context, index) {
                           var obj = searchingObject.features[index];
                           return ListTile(
                             onTap: () async {
                               ref
-                                  .read(openCloseupListCurrentStartProvider
-                                  .state)
+                                  .read(openCloseupListWannaGoProvider.state)
                                   .update((state) => false);
-                              _presentLocationController.text =
-                              searchingObject.features[index].text!;
-
-                              final GoogleMapController controller = await _controller.future;
-                              controller
-                                  .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+                              _wannagoLocationController.text =
+                                  searchingObject.features[index].text!;
+                              final GoogleMapController controller =
+                                  await _controller.future;
+                              controller.animateCamera(
+                                  CameraUpdate.newCameraPosition(CameraPosition(
                                 target: LatLng(obj.center![1], obj.center![0]),
                                 zoom: 16,
                               )));
-                              Logger().e('Chay hay ko');
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pick up your Location')));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('pick up your destinations')));
                             },
-                            title: Text(
-                                searchingObject.features[index].text ??
-                                    'Unknow'),
+                            title: Text(searchingObject.features[index].text ??
+                                'Unknow'),
                             subtitle: Text(
                               searchingObject.features[index].placeName ??
                                   'Unknown',
                             ),
                           );
-                        }
-                      },
+                        },
+                      ),
                     ),
-                  ),
-                )
-                    : const SizedBox(),
-                TextFormField(
-                  controller: _wannagoLocationController,
-                  onTap: ()  {
-
-                    ref
-                        .read(openCloseupListCurrentStartProvider.state)
-                        .update((state) => false);
-                  },
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Search some where',
-                      suffixIcon: IconButton(
-                          onPressed: () {
-                            ref
-                                .read(openCloseupListWannaGoProvider.state)
-                                .update((state) => true);
-                            ref
-                                .read(SearchingObjectProvider.notifier)
-                                .getSearchingObject(
-                                _wannagoLocationController.text);
-                          },
-                          icon: const Icon(Icons.search))),
-                  onChanged: (str){
-                    if(str.isEmpty){
-                      ref
-                          .read(openCloseupListWannaGoProvider.state)
-                          .update((state) => false);
-                    }
-                  },
-
-                ),
-                openCloseWannaGo
-                    ? Flexible(
-                  fit: FlexFit.loose,
-                  child: SizedBox(
-                    height: 350,
-                    child: ListView.builder(
-                      itemCount: searchingObject.features.length,
-                      itemBuilder: (context, index) {
-                        var obj = searchingObject.features[index];
-                        return ListTile(
-                          onTap: () async {
-                            ref
-                                .read(openCloseupListWannaGoProvider.state)
-                                .update((state) => false);
-                            _wannagoLocationController.text =
-                            searchingObject.features[index].text!;
-                            final GoogleMapController controller = await _controller.future;
-                            controller
-                                .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-                              target: LatLng(obj.center![1], obj.center![0]),
-                              zoom: 16,
-                            )));
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pick up your destinations')));
-                          },
-                          title: Text(
-                              searchingObject.features[index].text ??
-                                  'Unknow'),
-                          subtitle: Text(
-                            searchingObject.features[index].placeName ??
-                                'Unknown',
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                )
-                    : const SizedBox(),
-                TextButton(onPressed: (){
+                  )
+                : const SizedBox(),
+            TextButton(
+                onPressed: () {
+                  String distance = '';
                   ref.read(findOptionProvider.state).update((state) => !state);
-                  DirectionsClient(Dio())
-                      .getDirection('-122.39636,37.79129;-122.39732,37.79283;-122.39606,37.79349', accessToken, 'maxspeed', 'geojson', 'full')
-                      .then((value) {
-                        var listGeometry = value.routes[0].geometry.coordinates;
-                        for(final i in listGeometry){
-                          // ref.read(markerProvider.notifier).addMarker(Marker(markerId: MarkerId('${i[0]+i[1]}'),position: LatLng))
-                        }
-                  });
-                }, child: Text('Find'))
-              ],
-            ),
-          )),
+                  if (_listmarker.length < 2) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content:
+                            Text('Pick up Starting point and ends point')));
+                  }
+                  distance =
+                      '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
+                  ref
+                      .read(directionsProvider.notifier)
+                      .getDirectionObj(distance);
+                setState(() {
+
+                });
+                },
+                child: Text('Find'))
+          ],
+        ),
+      )),
     );
   }
 }

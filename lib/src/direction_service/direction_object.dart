@@ -117,8 +117,8 @@ class Admin {
     required this.iso31661,
   });
 
-  final String iso31661Alpha3;
-  final String iso31661;
+  final String? iso31661Alpha3;
+  final String? iso31661;
 
   factory Admin.fromJson(Map<String, dynamic> json) => Admin(
     iso31661Alpha3: json["iso_3166_1_alpha3"],
