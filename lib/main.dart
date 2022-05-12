@@ -10,7 +10,7 @@ import 'package:location/location.dart';
 import 'package:logger/logger.dart';
 
 void main() => runApp(const ProviderScope(child: const MyApp()));
-
+List<LatLng> myListLatLng=[];
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -37,7 +37,6 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       TextEditingController();
   final TextEditingController _wannagoLocationController =
       TextEditingController();
-
   @override
   void initState() {
     // TODO: implement initState
@@ -118,13 +117,13 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               },
               onTap: _handleTap,
               polylines: {
-                if (directionsObject.routes.isNotEmpty)
+
                   Polyline(
+                    color: Colors.red,
+                      width: 3,
                       polylineId:
-                          PolylineId(directionsObject.routes[0].weightName),
-                      points: directionsObject.routes[0].geometry.coordinates
-                          .map((e) => LatLng(e[0], e[1]))
-                          .toList())
+                          PolylineId('halo'),
+                      points: myListLatLng)
               },
             ),
             UIcheckfindProvider
@@ -152,6 +151,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       ref.read(markerProvider.notifier).addMarker(
           Marker(markerId: MarkerId(latln.toString()), position: latln));
       Logger().w(latln.toString());
+      myListLatLng.clear();
     } else {
       ref.read(markerProvider.notifier).deleteAllMarker();
     }
@@ -161,6 +161,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
     bool openCloseCurrentLo = ref.watch(openCloseupListCurrentStartProvider);
     var searchingObject = ref.watch(SearchingObjectProvider);
+    var direction = ref.watch(directionsProvider);
     var _listmarker = ref.watch(markerProvider);
     return Container(
       padding: const EdgeInsets.only(top: 32),
@@ -333,9 +334,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                   ref
                       .read(directionsProvider.notifier)
                       .getDirectionObj(distance);
-                setState(() {
+                Future.delayed(Duration(seconds: 1),(){
+                  setState(() {
 
-                });
+                  });
+                },);
                 },
                 child: Text('Find'))
           ],

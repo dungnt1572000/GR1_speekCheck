@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:doan1/constant/accessTokenTest.dart';
+import 'package:doan1/main.dart';
 import 'package:doan1/src/apicalling/api_client.dart';
 import 'package:doan1/src/apicalling/node.dart';
 import 'package:doan1/src/direction_service/api_direction_client.dart';
@@ -106,7 +107,7 @@ class DirectionNotifier extends StateNotifier<DirectionObject> {
     DirectionsClient(Dio())
         .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
-        Logger().i(value.routes.length);
+        myListLatLng = value.routes[0].geometry.coordinates.map((e) => LatLng(e[1], e[0])).toList();
     });
   }
 }
