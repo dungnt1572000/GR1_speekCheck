@@ -108,6 +108,7 @@ class DirectionNotifier extends StateNotifier<DirectionObject> {
         .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
         myListLatLng = value.routes[0].geometry.coordinates.map((e) => LatLng(e[1], e[0])).toList();
+        state= value;
     });
   }
 }

@@ -9,8 +9,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:logger/logger.dart';
 
+import 'aleart_screen.dart';
+
 void main() => runApp(const ProviderScope(child: const MyApp()));
-List<LatLng> myListLatLng=[];
+List<LatLng> myListLatLng = [];
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -22,8 +25,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-Completer<GoogleMapController> _controller = Completer();
-
 class MyHomePage extends ConsumerStatefulWidget {
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -33,10 +34,12 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
+  final Completer<GoogleMapController> _controller = Completer();
   final TextEditingController _presentLocationController =
       TextEditingController();
   final TextEditingController _wannagoLocationController =
       TextEditingController();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -52,10 +55,8 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-
     double latitude = ref.watch(latetitudeProvider);
     double longtitude = ref.watch(longtitudeProvider);
-
     Location location = Location();
 
     bool _serviceEnabled;
@@ -64,6 +65,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     List<Marker> _marker = ref.watch(markerProvider);
     bool UIcheckfindProvider = ref.watch(findOptionProvider);
     DirectionObject directionsObject = ref.watch(directionsProvider);
+    var curSpeed = ref.watch(speedProvider);
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -98,6 +100,12 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             target: LatLng(_locationData.latitude!, _locationData.longitude!),
             zoom: 11.15,
           )));
+          location.onLocationChanged.listen((event) {
+            ref
+                .read(speedProvider.notifier)
+                .update((state) => event.speed ?? 0);
+            event.heading != 1.1;
+          });
         },
         child: const Icon(Icons.my_location),
       ),
@@ -117,13 +125,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               },
               onTap: _handleTap,
               polylines: {
-
-                  Polyline(
+                Polyline(
                     color: Colors.red,
-                      width: 3,
-                      polylineId:
-                          PolylineId('halo'),
-                      points: myListLatLng)
+                    width: 3,
+                    polylineId: const PolylineId('halo'),
+                    points: myListLatLng)
               },
             ),
             UIcheckfindProvider
@@ -147,6 +153,8 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
 
   _handleTap(LatLng latln) {
     var _listmarker = ref.watch(markerProvider);
+    var _late = ref.watch(latetitudeProvider);
+    var _long = ref.watch(longtitudeProvider);
     if (_listmarker.length < 2) {
       ref.read(markerProvider.notifier).addMarker(
           Marker(markerId: MarkerId(latln.toString()), position: latln));
@@ -163,6 +171,9 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     var searchingObject = ref.watch(SearchingObjectProvider);
     var direction = ref.watch(directionsProvider);
     var _listmarker = ref.watch(markerProvider);
+    var _late = ref.watch(latetitudeProvider);
+    var _long = ref.watch(longtitudeProvider);
+    var _speed = ref.watch(speedProvider);
     return Container(
       padding: const EdgeInsets.only(top: 32),
       color: Colors.white,
@@ -304,7 +315,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                                 zoom: 16,
                               )));
                               ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                       content:
                                           Text('pick up your destinations')));
                             },
@@ -322,25 +333,65 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                 : const SizedBox(),
             TextButton(
                 onPressed: () {
-                  String distance = '';
+                  var distance = '';
                   ref.read(findOptionProvider.state).update((state) => !state);
-                  if (_listmarker.length < 2) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content:
-                            Text('Pick up Starting point and ends point')));
+                  if (_presentLocationController.text.isEmpty) {
+                    if (_listmarker.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content:
+                              Text('Pick starting point and destination')));
+                    }
+                    if (_listmarker.length == 1) {
+                      _listmarker.insert(
+                          0,
+                          Marker(
+                              markerId: const MarkerId('current point'),
+                              position: LatLng(_late, _long)));
+                    }
                   }
-                  distance =
-                      '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
-                  ref
-                      .read(directionsProvider.notifier)
-                      .getDirectionObj(distance);
-                Future.delayed(Duration(seconds: 1),(){
-                  setState(() {
-
-                  });
-                },);
+                  if (_listmarker.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Pick starting point and destination')));
+                  }
+                  if (_listmarker.length == 1) {
+                    if (_presentLocationController.text.isNotEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content:
+                              Text('Pick starting point and destination')));
+                    } else {
+                      _listmarker.insert(
+                          0,
+                          Marker(
+                              markerId: const MarkerId('current point'),
+                              position: LatLng(_late, _long)));
+                      ref
+                          .read(directionsProvider.notifier)
+                          .getDirectionObj(distance);
+                      Future.delayed(
+                        const Duration(seconds: 1),
+                            () {
+                          setState(() {});
+                        },
+                      );
+                    }
+                  }
+                  if (_listmarker.length == 2) {
+                    distance =
+                    '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
+                    ref
+                        .read(directionsProvider.notifier)
+                        .getDirectionObj(distance);
+                    Future.delayed(
+                      const Duration(seconds: 1),
+                          () {
+                        setState(() {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const AlertScreen()));
+                        });
+                      },
+                    );
+                  }
                 },
-                child: Text('Find'))
+                child: const Text('Find'))
           ],
         ),
       )),
