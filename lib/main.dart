@@ -64,6 +64,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     LocationData _locationData;
     List<Marker> _marker = ref.watch(markerProvider);
     bool UIcheckfindProvider = ref.watch(findOptionProvider);
+    bool UIopenInforSceen = ref.watch(openDraggableInforProvider);
     DirectionObject directionsObject = ref.watch(directionsProvider);
     var curSpeed = ref.watch(speedProvider);
     return Scaffold(
@@ -144,7 +145,33 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                       Icons.keyboard_arrow_down,
                       color: Colors.blue,
                     ))
-                : _buildSearchingBar()
+                : _buildSearchingBar(),
+            directionsObject.uuid.isNotEmpty
+                ? DraggableScrollableSheet(
+                    initialChildSize: 0.5,
+                    maxChildSize: 0.5,
+                    minChildSize: 0.05,
+                    builder: (context, scrollController) => Container(
+                      color: Colors.white,
+                      child: ListView(
+                        controller: scrollController,
+                        children: [
+                          Icon(Icons.arrow_upward_outlined),
+                          Divider(),
+                          Text(
+                              'Start point: ${directionsObject.waypoints[0].name}'),
+                          Text(
+                              'End point: ${directionsObject.waypoints[1].name}'),
+                          Text('current Speed: ${curSpeed}'),
+                          Text(
+                              'Distance: ${directionsObject.routes[0].distance}'),
+                          Text(
+                              'Time Directions: ${directionsObject.routes[0].duration}')
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox()
           ],
         ),
       ),
@@ -169,11 +196,9 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
     bool openCloseCurrentLo = ref.watch(openCloseupListCurrentStartProvider);
     var searchingObject = ref.watch(SearchingObjectProvider);
-    var direction = ref.watch(directionsProvider);
     var _listmarker = ref.watch(markerProvider);
     var _late = ref.watch(latetitudeProvider);
     var _long = ref.watch(longtitudeProvider);
-    var _speed = ref.watch(speedProvider);
     return Container(
       padding: const EdgeInsets.only(top: 32),
       color: Colors.white,
@@ -367,28 +392,14 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                       ref
                           .read(directionsProvider.notifier)
                           .getDirectionObj(distance);
-                      Future.delayed(
-                        const Duration(seconds: 1),
-                            () {
-                          setState(() {});
-                        },
-                      );
                     }
                   }
                   if (_listmarker.length == 2) {
                     distance =
-                    '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
+                        '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
                     ref
                         .read(directionsProvider.notifier)
                         .getDirectionObj(distance);
-                    Future.delayed(
-                      const Duration(seconds: 1),
-                          () {
-                        setState(() {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const AlertScreen()));
-                        });
-                      },
-                    );
                   }
                 },
                 child: const Text('Find'))
