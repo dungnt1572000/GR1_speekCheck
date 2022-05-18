@@ -28,6 +28,7 @@ final zoomProvider = StateProvider(
 final findOptionProvider = StateProvider(
   (ref) => false,
 );
+final openDraggableInforProvider = StateProvider((ref) => false);
 
 final openInformationProvider = StateProvider(
   (ref) => false,
@@ -111,11 +112,20 @@ class DirectionNotifier extends StateNotifier<DirectionObject> {
     DirectionsClient(Dio())
         .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
+
       myListLatLng = value.routes[0].geometry.coordinates
           .map((e) => LatLng(e[1], e[0]))
           .toList();
+
+      // myListLatLng = value.routes[0].geometry.coordinates
+      //     .map((e) => LatLng(e[1], e[0]))
+      //     .toList();
       state = value;
     });
+  }
+
+  void deleteDirectionObj() {
+    state = DirectionObject(uuid: '', waypoints: [], routes: [], code: '');
   }
 }
 
