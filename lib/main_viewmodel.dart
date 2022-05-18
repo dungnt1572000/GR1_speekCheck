@@ -7,7 +7,6 @@ import 'package:doan1/src/direction_service/api_direction_client.dart';
 import 'package:doan1/src/direction_service/direction_object.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:logger/logger.dart';
 
 final latetitudeProvider = StateProvider(
   (ref) => 10.762622,
@@ -27,6 +26,10 @@ final zoomProvider = StateProvider(
 );
 
 final findOptionProvider = StateProvider(
+  (ref) => false,
+);
+
+final openInformationProvider = StateProvider(
   (ref) => false,
 );
 
@@ -71,13 +74,14 @@ class MarkerNotifier extends StateNotifier<List<Marker>> {
   MarkerNotifier(List<Marker> state) : super(state);
 
   void addMarker(Marker marker) {
-    if(state.length>2){
-      state=[];
+    if (state.length > 2) {
+      state = [];
     }
     state = [...state, marker];
     print(state.length);
   }
-  void addAllMarker(List<Marker> listMarker){
+
+  void addAllMarker(List<Marker> listMarker) {
     state = listMarker;
   }
 
@@ -101,16 +105,21 @@ final markerProvider = StateNotifierProvider<MarkerNotifier, List<Marker>>(
 );
 
 class DirectionNotifier extends StateNotifier<DirectionObject> {
-  DirectionNotifier( DirectionObject state) : super(state);
+  DirectionNotifier(DirectionObject state) : super(state);
 
   void getDirectionObj(String distance) async {
     DirectionsClient(Dio())
         .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
-        myListLatLng = value.routes[0].geometry.coordinates.map((e) => LatLng(e[1], e[0])).toList();
-        state= value;
+      myListLatLng = value.routes[0].geometry.coordinates
+          .map((e) => LatLng(e[1], e[0]))
+          .toList();
+      state = value;
     });
   }
 }
 
-final directionsProvider = StateNotifierProvider<DirectionNotifier,DirectionObject>((ref) => DirectionNotifier(DirectionObject(uuid: '', waypoints: [], routes: [], code: '')));
+final directionsProvider =
+    StateNotifierProvider<DirectionNotifier, DirectionObject>((ref) =>
+        DirectionNotifier(
+            DirectionObject(uuid: '', waypoints: [], routes: [], code: '')));

@@ -9,8 +9,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:logger/logger.dart';
 
-import 'aleart_screen.dart';
-
 void main() => runApp(const ProviderScope(child: const MyApp()));
 List<LatLng> myListLatLng = [];
 
@@ -64,8 +62,32 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     LocationData _locationData;
     List<Marker> _marker = ref.watch(markerProvider);
     bool UIcheckfindProvider = ref.watch(findOptionProvider);
+    bool openInfor = ref.watch(openInformationProvider);
     DirectionObject directionsObject = ref.watch(directionsProvider);
     var curSpeed = ref.watch(speedProvider);
+
+    int? _getCurrentSpeed(){
+      int sml =0;
+      // di ve dong bac
+      if(myListLatLng[0].longitude<myListLatLng[1].longitude && myListLatLng[0].latitude<myListLatLng[1].latitude){
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude<=element[1]&&longtitude<element[0]);
+      }
+      // phia dong nam
+      if(myListLatLng[0].longitude<myListLatLng[1].longitude && myListLatLng[0].latitude>myListLatLng[1].latitude){
+         sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude<=element[0]);
+
+      }
+      // phia tay bac
+      if(myListLatLng[0].longitude>myListLatLng[1].longitude && myListLatLng[0].latitude<myListLatLng[1].latitude){
+        //
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude<element[0]);
+      }
+      // tay nam
+      else{
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude>=element[0]);
+      }
+      return directionsObject.routes[0].legs[0].annotation.maxspeed[sml].speed;
+    }
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -144,7 +166,37 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                       Icons.keyboard_arrow_down,
                       color: Colors.blue,
                     ))
-                : _buildSearchingBar()
+                : _buildSearchingBar(),
+            directionsObject.code.isNotEmpty
+                ? DraggableScrollableSheet(
+                    initialChildSize: 0.5,
+                    maxChildSize: 0.7,
+                    minChildSize: 0.03,
+                    builder: (context, scrollController) => Container(
+                      color: Colors.white,
+                      child: ListView(
+                        controller: scrollController,
+                        children: [
+                          Icon(Icons.keyboard_arrow_up),
+                          const Divider(height: 2,color: Colors.red,),
+                          Text(
+                            'Current Speed: $curSpeed',
+                            style: const TextStyle(
+                                color: Colors.blue,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          Divider(),
+                          Text('Starting point: ${directionsObject.waypoints[0].name}'),
+                          Text('Ends point: ${directionsObject.waypoints[1].name}'),
+                          Text('Abroad: ${directionsObject.routes[0].countryCrossed}'),
+                          Divider(),
+                          Text('Accept Spped in this Way: ${_getCurrentSpeed()??40}km/h')
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox()
           ],
         ),
       ),
@@ -367,28 +419,20 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                       ref
                           .read(directionsProvider.notifier)
                           .getDirectionObj(distance);
-                      Future.delayed(
-                        const Duration(seconds: 1),
-                            () {
-                          setState(() {});
-                        },
-                      );
                     }
                   }
                   if (_listmarker.length == 2) {
+                    ref
+                        .read(longtitudeProvider.state)
+                        .update((state) => _listmarker[0].position.longitude);
+                    ref
+                        .read(latetitudeProvider.state)
+                        .update((state) => _listmarker[0].position.latitude);
                     distance =
-                    '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
+                        '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
                     ref
                         .read(directionsProvider.notifier)
                         .getDirectionObj(distance);
-                    Future.delayed(
-                      const Duration(seconds: 1),
-                          () {
-                        setState(() {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const AlertScreen()));
-                        });
-                      },
-                    );
                   }
                 },
                 child: const Text('Find'))
