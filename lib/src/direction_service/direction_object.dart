@@ -157,8 +157,8 @@ class Maxspeed {
   final String? unit;
 
   factory Maxspeed.fromJson(Map<String, dynamic> json) => Maxspeed(
-    unknown: json["unknown"] == null ? null : json["unknown"],
-    speed: json["speed"] == null ? null : json["speed"],
+    unknown: json["unknown"],
+    speed: json["speed"],
     unit: json["unit"] == null ? null : json['unit'],
   );
 

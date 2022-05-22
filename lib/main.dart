@@ -9,7 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:logger/logger.dart';
 
-void main() => runApp(const ProviderScope(child: const MyApp()));
+void main() => runApp(const ProviderScope(child: MyApp()));
 List<LatLng> myListLatLng = [];
 
 class MyApp extends StatelessWidget {
@@ -17,13 +17,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends ConsumerStatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
+
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
     // TODO: implement createState
@@ -32,6 +34,7 @@ class MyHomePage extends ConsumerStatefulWidget {
 }
 
 class _MyHomePageState extends ConsumerState<MyHomePage> {
+  var distance = '';
   final Completer<GoogleMapController> _controller = Completer();
   final TextEditingController _presentLocationController =
       TextEditingController();
@@ -61,33 +64,54 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     PermissionStatus _permissionGranted;
     LocationData _locationData;
     List<Marker> _marker = ref.watch(markerProvider);
-    bool UIcheckfindProvider = ref.watch(findOptionProvider);
+    bool uIcheckfindProvider = ref.watch(findOptionProvider);
     bool openInfor = ref.watch(openInformationProvider);
     DirectionObject directionsObject = ref.watch(directionsProvider);
     var curSpeed = ref.watch(speedProvider);
+    int? _getCurrentSpeed() {
+      int sml = 0;
+      var arrSpeed = directionsObject.routes[0].legs[0].annotation.maxspeed;
+      for (int i = 0; i < arrSpeed.length; i++) {
+        if (arrSpeed[i].unknown == true) {
+          arrSpeed.insert(i, Maxspeed(speed: 40, unit: 'km/h', unknown: null));
+          arrSpeed.removeAt(i + 1);
+        }
+      }
 
-    int? _getCurrentSpeed(){
-      int sml =0;
       // di ve dong bac
-      if(myListLatLng[0].longitude<myListLatLng[1].longitude && myListLatLng[0].latitude<myListLatLng[1].latitude){
-        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude<=element[1]&&longtitude<element[0]);
+      if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
+          myListLatLng[0].latitude < myListLatLng[1].latitude) {
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude <= element[1] && longtitude < element[0]);
+        Logger().v(sml);
       }
       // phia dong nam
-      if(myListLatLng[0].longitude<myListLatLng[1].longitude && myListLatLng[0].latitude>myListLatLng[1].latitude){
-         sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude<=element[0]);
-
+      if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
+          myListLatLng[0].latitude > myListLatLng[1].latitude) {
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude <= element[0]);
+        Logger().v(sml);
       }
       // phia tay bac
-      if(myListLatLng[0].longitude>myListLatLng[1].longitude && myListLatLng[0].latitude<myListLatLng[1].latitude){
+      if (myListLatLng[0].longitude > myListLatLng[1].longitude &&
+          myListLatLng[0].latitude < myListLatLng[1].latitude) {
         //
-        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude<element[0]);
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude < element[0]);
+        Logger().v(sml);
       }
       // tay nam
-      else{
-        sml = directionsObject.routes[0].geometry.coordinates.indexWhere((element) => latitude>=element[1]&&longtitude>=element[0]);
+      else {
+        sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude >= element[0]);
+        Logger().v(sml);
       }
-      return directionsObject.routes[0].legs[0].annotation.maxspeed[sml].speed;
+      if (sml < 0) {
+        return 400;
+      }
+      return arrSpeed[sml].speed;
     }
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -117,11 +141,15 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               .update((state) => state = _locationData.longitude ?? 105.84117);
 
           final GoogleMapController controller = await _controller.future;
-          controller
-              .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-            target: LatLng(_locationData.latitude!, _locationData.longitude!),
-            zoom: 11.15,
-          )));
+          controller.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target:
+                    LatLng(_locationData.latitude!, _locationData.longitude!),
+                zoom: 11.15,
+              ),
+            ),
+          );
           location.onLocationChanged.listen((event) {
             ref
                 .read(speedProvider.notifier)
@@ -154,8 +182,9 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                     points: myListLatLng)
               },
             ),
-            UIcheckfindProvider
-                ? ElevatedButton(
+            AnimatedCrossFade(
+                firstChild: _buildSearchingBar(),
+                secondChild: ElevatedButton(
                     style: ElevatedButton.styleFrom(primary: Colors.white),
                     onPressed: () {
                       ref
@@ -165,38 +194,113 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                     child: const Icon(
                       Icons.keyboard_arrow_down,
                       color: Colors.blue,
-                    ))
-                : _buildSearchingBar(),
-            directionsObject.code.isNotEmpty
-                ? DraggableScrollableSheet(
-                    initialChildSize: 0.5,
-                    maxChildSize: 0.7,
-                    minChildSize: 0.03,
-                    builder: (context, scrollController) => Container(
-                      color: Colors.white,
-                      child: ListView(
-                        controller: scrollController,
-                        children: [
-                          Icon(Icons.keyboard_arrow_up),
-                          const Divider(height: 2,color: Colors.red,),
-                          Text(
-                            'Current Speed: $curSpeed',
-                            style: const TextStyle(
-                                color: Colors.blue,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w500),
+                    )),
+                crossFadeState: uIcheckfindProvider
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: const Duration(milliseconds: 500)),
+            if (openInfor == true && myListLatLng.isNotEmpty)
+              DraggableScrollableSheet(
+                initialChildSize: 0.4,
+                maxChildSize: 0.5,
+                minChildSize: 0.03,
+                builder: (context, scrollController) => Container(
+                    color: Colors.white,
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                                child: TextButton(
+                              child: const Icon(Icons.directions_run_rounded),
+                              onPressed: () {
+                                ref
+                                    .read(directionsProvider.notifier)
+                                    .getDirectionObjWalking(distance);
+                              },
+                            )),
+                            Expanded(
+                                child: TextButton(
+                                    child: const Icon(
+                                        Icons.directions_car_rounded),
+                                    onPressed: () {
+                                      ref
+                                          .read(directionsProvider.notifier)
+                                          .getDirectionObjDriving(distance);
+                                    })),
+                            Expanded(
+                                child: TextButton(
+                                    child: const Icon(
+                                        Icons.directions_bike_rounded),
+                                    onPressed: () {})),
+                          ],
+                        ),
+                        const Divider(
+                          height: 2,
+                          color: Colors.red,
+                        ),
+                        Text(
+                          'Current Speed: ${curSpeed.toStringAsFixed(2)} km/h',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w500,
                           ),
-                          Divider(),
-                          Text('Starting point: ${directionsObject.waypoints[0].name}'),
-                          Text('Ends point: ${directionsObject.waypoints[1].name}'),
-                          Text('Abroad: ${directionsObject.routes[0].countryCrossed}'),
-                          Divider(),
-                          Text('Accept Spped in this Way: ${_getCurrentSpeed()??40}km/h')
-                        ],
-                      ),
+                        ),
+                        const Divider(),
+                        Text(
+                            'Starting point: ${directionsObject.waypoints[0].name}'),
+                        Text(
+                            'Ends point: ${directionsObject.waypoints[1].name}'),
+                        Text(
+                            'Duration: ${directionsObject.routes[0].duration} sec'),
+                        Text(
+                            'Distance : ${directionsObject.routes[0].distance} m'),
+                        Text(
+                            'Abroad: ${directionsObject.routes[0].countryCrossed}'),
+                        const Divider(),
+                        Text(
+                            'Accept Current Speed in this Way: ${_getCurrentSpeed() ?? 40}km/h')
+                      ],
+                    )
+                    // ListView(
+                    //   controller: scrollController,
+                    //   children: [
+                    //     const Icon(Icons.keyboard_arrow_up),
+                    //     const Divider(
+                    //       height: 2,
+                    //       color: Colors.red,
+                    //     ),
+                    //     Text(
+                    //       'Current Speed: ${curSpeed.toStringAsFixed(2)} km/h',
+                    //       style: const TextStyle(
+                    //         color: Colors.blue,
+                    //         fontSize: 30,
+                    //         fontWeight: FontWeight.w500,
+                    //       ),
+                    //     ),
+                    //     const Divider(),
+                    //     Text(
+                    //         'Starting point: ${directionsObject.waypoints[0].name}'),
+                    //     Text('Ends point: ${directionsObject.waypoints[1].name}'),
+                    //     Text(
+                    //         'Duration: ${directionsObject.routes[0].duration} sec'),
+                    //     Text(
+                    //         'Distance : ${directionsObject.routes[0].distance} m'),
+                    //     Text(
+                    //         'Abroad: ${directionsObject.routes[0].countryCrossed}'),
+                    //     const Divider(),
+                    //     Text(
+                    //         'Accept Current Speed in this Way: ${_getCurrentSpeed() ?? 40}km/h')
+                    //   ],
+                    // )
+
                     ),
-                  )
-                : const SizedBox()
+              )
+            else
+              const SizedBox()
           ],
         ),
       ),
@@ -205,15 +309,16 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
 
   _handleTap(LatLng latln) {
     var _listmarker = ref.watch(markerProvider);
-    var _late = ref.watch(latetitudeProvider);
-    var _long = ref.watch(longtitudeProvider);
     if (_listmarker.length < 2) {
       ref.read(markerProvider.notifier).addMarker(
           Marker(markerId: MarkerId(latln.toString()), position: latln));
       Logger().w(latln.toString());
-      myListLatLng.clear();
     } else {
       ref.read(markerProvider.notifier).deleteAllMarker();
+      ref.read(openInformationProvider.state).update((state) => false);
+      setState(() {
+        myListLatLng.clear();
+      });
     }
   }
 
@@ -221,13 +326,11 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     bool openCloseWannaGo = ref.watch(openCloseupListWannaGoProvider);
     bool openCloseCurrentLo = ref.watch(openCloseupListCurrentStartProvider);
     var searchingObject = ref.watch(SearchingObjectProvider);
-    var direction = ref.watch(directionsProvider);
     var _listmarker = ref.watch(markerProvider);
     var _late = ref.watch(latetitudeProvider);
     var _long = ref.watch(longtitudeProvider);
-    var _speed = ref.watch(speedProvider);
     return Container(
-      padding: const EdgeInsets.only(top: 32),
+      margin: const EdgeInsets.only(top: 20),
       color: Colors.white,
       child: Form(
           child: SingleChildScrollView(
@@ -385,7 +488,6 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                 : const SizedBox(),
             TextButton(
                 onPressed: () {
-                  var distance = '';
                   ref.read(findOptionProvider.state).update((state) => !state);
                   if (_presentLocationController.text.isEmpty) {
                     if (_listmarker.isEmpty) {
@@ -418,7 +520,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                               position: LatLng(_late, _long)));
                       ref
                           .read(directionsProvider.notifier)
-                          .getDirectionObj(distance);
+                          .getDirectionObjDriving(distance);
                     }
                   }
                   if (_listmarker.length == 2) {
@@ -432,7 +534,10 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                         '${_listmarker[0].position.longitude},${_listmarker[0].position.latitude};${_listmarker[1].position.longitude},${_listmarker[1].position.latitude}';
                     ref
                         .read(directionsProvider.notifier)
-                        .getDirectionObj(distance);
+                        .getDirectionObjDriving(distance);
+                    ref
+                        .read(openInformationProvider.state)
+                        .update((state) => true);
                   }
                 },
                 child: const Text('Find'))

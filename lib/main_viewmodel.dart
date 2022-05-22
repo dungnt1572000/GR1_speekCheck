@@ -108,24 +108,28 @@ final markerProvider = StateNotifierProvider<MarkerNotifier, List<Marker>>(
 class DirectionNotifier extends StateNotifier<DirectionObject> {
   DirectionNotifier(DirectionObject state) : super(state);
 
-  void getDirectionObj(String distance) async {
+  void getDirectionObjDriving(String distance) async {
     DirectionsClient(Dio())
-        .getDirection(distance, accessToken, 'maxspeed', 'geojson', 'full')
+        .getDirectionDriving(distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
 
       myListLatLng = value.routes[0].geometry.coordinates
           .map((e) => LatLng(e[1], e[0]))
           .toList();
-
-      // myListLatLng = value.routes[0].geometry.coordinates
-      //     .map((e) => LatLng(e[1], e[0]))
-      //     .toList();
       state = value;
     });
   }
 
-  void deleteDirectionObj() {
-    state = DirectionObject(uuid: '', waypoints: [], routes: [], code: '');
+  void getDirectionObjWalking(String distance) async {
+    DirectionsClient(Dio())
+        .getDirectionWalking(distance, accessToken, 'maxspeed', 'geojson', 'full')
+        .then((value) {
+
+      myListLatLng = value.routes[0].geometry.coordinates
+          .map((e) => LatLng(e[1], e[0]))
+          .toList();
+      state = value;
+    });
   }
 }
 
