@@ -70,6 +70,9 @@ final markerWayProvider = Provider<List<MapWay>>(
     return myList;
   },
 );
+final typeGoingProvider = StateProvider(
+  (ref) => 'Driving',
+);
 
 class MarkerNotifier extends StateNotifier<List<Marker>> {
   MarkerNotifier(List<Marker> state) : super(state);
@@ -79,7 +82,6 @@ class MarkerNotifier extends StateNotifier<List<Marker>> {
       state = [];
     }
     state = [...state, marker];
-    print(state.length);
   }
 
   void addAllMarker(List<Marker> listMarker) {
@@ -110,9 +112,9 @@ class DirectionNotifier extends StateNotifier<DirectionObject> {
 
   void getDirectionObjDriving(String distance) async {
     DirectionsClient(Dio())
-        .getDirectionDriving(distance, accessToken, 'maxspeed', 'geojson', 'full')
+        .getDirectionDriving(
+            distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
-
       myListLatLng = value.routes[0].geometry.coordinates
           .map((e) => LatLng(e[1], e[0]))
           .toList();
@@ -122,9 +124,9 @@ class DirectionNotifier extends StateNotifier<DirectionObject> {
 
   void getDirectionObjWalking(String distance) async {
     DirectionsClient(Dio())
-        .getDirectionWalking(distance, accessToken, 'maxspeed', 'geojson', 'full')
+        .getDirectionWalking(
+            distance, accessToken, 'maxspeed', 'geojson', 'full')
         .then((value) {
-
       myListLatLng = value.routes[0].geometry.coordinates
           .map((e) => LatLng(e[1], e[0]))
           .toList();
