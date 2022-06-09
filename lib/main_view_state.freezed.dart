@@ -23,7 +23,11 @@ mixin _$MainViewState {
   bool get openInformation => throw _privateConstructorUsedError;
   String get typeGoing => throw _privateConstructorUsedError;
   List<Marker> get listMarker => throw _privateConstructorUsedError;
+  List<LatLng> get listLatLng => throw _privateConstructorUsedError;
   DirectionObject? get directionObject => throw _privateConstructorUsedError;
+  dynamic get openWannagoListPoint => throw _privateConstructorUsedError;
+  dynamic get openStartingListPoint => throw _privateConstructorUsedError;
+  SearchingObject? get searchingObject => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $MainViewStateCopyWith<MainViewState> get copyWith =>
@@ -43,7 +47,11 @@ abstract class $MainViewStateCopyWith<$Res> {
       bool openInformation,
       String typeGoing,
       List<Marker> listMarker,
-      DirectionObject? directionObject});
+      List<LatLng> listLatLng,
+      DirectionObject? directionObject,
+      dynamic openWannagoListPoint,
+      dynamic openStartingListPoint,
+      SearchingObject? searchingObject});
 }
 
 /// @nodoc
@@ -64,7 +72,11 @@ class _$MainViewStateCopyWithImpl<$Res>
     Object? openInformation = freezed,
     Object? typeGoing = freezed,
     Object? listMarker = freezed,
+    Object? listLatLng = freezed,
     Object? directionObject = freezed,
+    Object? openWannagoListPoint = freezed,
+    Object? openStartingListPoint = freezed,
+    Object? searchingObject = freezed,
   }) {
     return _then(_value.copyWith(
       latetitude: latetitude == freezed
@@ -95,10 +107,26 @@ class _$MainViewStateCopyWithImpl<$Res>
           ? _value.listMarker
           : listMarker // ignore: cast_nullable_to_non_nullable
               as List<Marker>,
+      listLatLng: listLatLng == freezed
+          ? _value.listLatLng
+          : listLatLng // ignore: cast_nullable_to_non_nullable
+              as List<LatLng>,
       directionObject: directionObject == freezed
           ? _value.directionObject
           : directionObject // ignore: cast_nullable_to_non_nullable
               as DirectionObject?,
+      openWannagoListPoint: openWannagoListPoint == freezed
+          ? _value.openWannagoListPoint
+          : openWannagoListPoint // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      openStartingListPoint: openStartingListPoint == freezed
+          ? _value.openStartingListPoint
+          : openStartingListPoint // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      searchingObject: searchingObject == freezed
+          ? _value.searchingObject
+          : searchingObject // ignore: cast_nullable_to_non_nullable
+              as SearchingObject?,
     ));
   }
 }
@@ -118,7 +146,11 @@ abstract class _$MainViewStateCopyWith<$Res>
       bool openInformation,
       String typeGoing,
       List<Marker> listMarker,
-      DirectionObject? directionObject});
+      List<LatLng> listLatLng,
+      DirectionObject? directionObject,
+      dynamic openWannagoListPoint,
+      dynamic openStartingListPoint,
+      SearchingObject? searchingObject});
 }
 
 /// @nodoc
@@ -141,7 +173,11 @@ class __$MainViewStateCopyWithImpl<$Res>
     Object? openInformation = freezed,
     Object? typeGoing = freezed,
     Object? listMarker = freezed,
+    Object? listLatLng = freezed,
     Object? directionObject = freezed,
+    Object? openWannagoListPoint = freezed,
+    Object? openStartingListPoint = freezed,
+    Object? searchingObject = freezed,
   }) {
     return _then(_MainViewState(
       latetitude: latetitude == freezed
@@ -172,10 +208,24 @@ class __$MainViewStateCopyWithImpl<$Res>
           ? _value.listMarker
           : listMarker // ignore: cast_nullable_to_non_nullable
               as List<Marker>,
+      listLatLng: listLatLng == freezed
+          ? _value.listLatLng
+          : listLatLng // ignore: cast_nullable_to_non_nullable
+              as List<LatLng>,
       directionObject: directionObject == freezed
           ? _value.directionObject
           : directionObject // ignore: cast_nullable_to_non_nullable
               as DirectionObject?,
+      openWannagoListPoint: openWannagoListPoint == freezed
+          ? _value.openWannagoListPoint
+          : openWannagoListPoint,
+      openStartingListPoint: openStartingListPoint == freezed
+          ? _value.openStartingListPoint
+          : openStartingListPoint,
+      searchingObject: searchingObject == freezed
+          ? _value.searchingObject
+          : searchingObject // ignore: cast_nullable_to_non_nullable
+              as SearchingObject?,
     ));
   }
 }
@@ -186,13 +236,18 @@ class _$_MainViewState implements _MainViewState {
   _$_MainViewState(
       {this.latetitude = 10.762622,
       this.longtitude = 106.660172,
-      this.currentSpeed = 40,
+      this.currentSpeed = 0,
       this.openOption = false,
       this.openInformation = false,
       this.typeGoing = 'Driving',
       final List<Marker> listMarker = const [],
-      this.directionObject = null})
-      : _listMarker = listMarker;
+      final List<LatLng> listLatLng = const [],
+      this.directionObject = null,
+      this.openWannagoListPoint = false,
+      this.openStartingListPoint = false,
+      this.searchingObject = null})
+      : _listMarker = listMarker,
+        _listLatLng = listLatLng;
 
   @override
   @JsonKey()
@@ -220,13 +275,30 @@ class _$_MainViewState implements _MainViewState {
     return EqualUnmodifiableListView(_listMarker);
   }
 
+  final List<LatLng> _listLatLng;
+  @override
+  @JsonKey()
+  List<LatLng> get listLatLng {
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_listLatLng);
+  }
+
   @override
   @JsonKey()
   final DirectionObject? directionObject;
+  @override
+  @JsonKey()
+  final dynamic openWannagoListPoint;
+  @override
+  @JsonKey()
+  final dynamic openStartingListPoint;
+  @override
+  @JsonKey()
+  final SearchingObject? searchingObject;
 
   @override
   String toString() {
-    return 'MainViewState(latetitude: $latetitude, longtitude: $longtitude, currentSpeed: $currentSpeed, openOption: $openOption, openInformation: $openInformation, typeGoing: $typeGoing, listMarker: $listMarker, directionObject: $directionObject)';
+    return 'MainViewState(latetitude: $latetitude, longtitude: $longtitude, currentSpeed: $currentSpeed, openOption: $openOption, openInformation: $openInformation, typeGoing: $typeGoing, listMarker: $listMarker, listLatLng: $listLatLng, directionObject: $directionObject, openWannagoListPoint: $openWannagoListPoint, openStartingListPoint: $openStartingListPoint, searchingObject: $searchingObject)';
   }
 
   @override
@@ -248,7 +320,15 @@ class _$_MainViewState implements _MainViewState {
             const DeepCollectionEquality()
                 .equals(other.listMarker, listMarker) &&
             const DeepCollectionEquality()
-                .equals(other.directionObject, directionObject));
+                .equals(other.listLatLng, listLatLng) &&
+            const DeepCollectionEquality()
+                .equals(other.directionObject, directionObject) &&
+            const DeepCollectionEquality()
+                .equals(other.openWannagoListPoint, openWannagoListPoint) &&
+            const DeepCollectionEquality()
+                .equals(other.openStartingListPoint, openStartingListPoint) &&
+            const DeepCollectionEquality()
+                .equals(other.searchingObject, searchingObject));
   }
 
   @override
@@ -261,7 +341,11 @@ class _$_MainViewState implements _MainViewState {
       const DeepCollectionEquality().hash(openInformation),
       const DeepCollectionEquality().hash(typeGoing),
       const DeepCollectionEquality().hash(listMarker),
-      const DeepCollectionEquality().hash(directionObject));
+      const DeepCollectionEquality().hash(listLatLng),
+      const DeepCollectionEquality().hash(directionObject),
+      const DeepCollectionEquality().hash(openWannagoListPoint),
+      const DeepCollectionEquality().hash(openStartingListPoint),
+      const DeepCollectionEquality().hash(searchingObject));
 
   @JsonKey(ignore: true)
   @override
@@ -278,7 +362,11 @@ abstract class _MainViewState implements MainViewState {
       final bool openInformation,
       final String typeGoing,
       final List<Marker> listMarker,
-      final DirectionObject? directionObject}) = _$_MainViewState;
+      final List<LatLng> listLatLng,
+      final DirectionObject? directionObject,
+      final dynamic openWannagoListPoint,
+      final dynamic openStartingListPoint,
+      final SearchingObject? searchingObject}) = _$_MainViewState;
 
   @override
   double get latetitude => throw _privateConstructorUsedError;
@@ -295,7 +383,15 @@ abstract class _MainViewState implements MainViewState {
   @override
   List<Marker> get listMarker => throw _privateConstructorUsedError;
   @override
+  List<LatLng> get listLatLng => throw _privateConstructorUsedError;
+  @override
   DirectionObject? get directionObject => throw _privateConstructorUsedError;
+  @override
+  dynamic get openWannagoListPoint => throw _privateConstructorUsedError;
+  @override
+  dynamic get openStartingListPoint => throw _privateConstructorUsedError;
+  @override
+  SearchingObject? get searchingObject => throw _privateConstructorUsedError;
   @override
   @JsonKey(ignore: true)
   _$MainViewStateCopyWith<_MainViewState> get copyWith =>

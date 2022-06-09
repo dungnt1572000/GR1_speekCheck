@@ -4,7 +4,6 @@ import 'package:doan1/src/searching_service/api_search_client.dart';
 import 'package:doan1/src/searching_service/searching_object.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
 final openCloseupListWannaGoProvider = StateProvider(
   (ref) => false,
 );
@@ -12,18 +11,8 @@ final openCloseupListCurrentStartProvider = StateProvider(
   (ref) => false,
 );
 
-final currentLocationLateProvider = StateProvider<double>(
-  (ref) => 21.2,
-);
-final currentLocationLongProvider = StateProvider<double>(
-      (ref) => 21.3,
-);
-final wannagoLocationLateProvider = StateProvider<double>(
-  (ref) => 21.4,
-);
-final wannagoLocationLongProvider = StateProvider<double>(
-      (ref) => 21.5,
-);
+
+
 class SearchingNotifier extends StateNotifier<SearchingObject> {
   SearchingNotifier()
       : super(SearchingObject(
@@ -36,7 +25,7 @@ class SearchingNotifier extends StateNotifier<SearchingObject> {
   }
 }
 
-final SearchingObjectProvider =
+final searchingObjectProvider =
     StateNotifierProvider<SearchingNotifier, SearchingObject>(
   (ref) => SearchingNotifier(),
 );
