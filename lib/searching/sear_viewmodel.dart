@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:doan1/constant/accessTokenTest.dart';
+import 'package:doan1/constant/access_token_test.dart';
 import 'package:doan1/src/searching_service/api_search_client.dart';
 import 'package:doan1/src/searching_service/searching_object.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 final openCloseupListWannaGoProvider = StateProvider(
   (ref) => false,
 );

@@ -1,3 +1,4 @@
+import 'package:doan1/constant/all_of_enum.dart';
 import 'package:doan1/src/direction_service/direction_object.dart';
 import 'package:doan1/src/searching_service/searching_object.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -7,6 +8,7 @@ part 'main_view_state.freezed.dart';
 @freezed
 class MainViewState with _$MainViewState {
   factory MainViewState({
+    @Default(LoadingStatus.initial) LoadingStatus status,
     @Default(10.762622) double latetitude,
     @Default(106.660172) double longtitude,
     @Default(0) double currentSpeed,

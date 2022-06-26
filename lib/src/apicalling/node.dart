@@ -24,12 +24,9 @@ class Node {
     license = json['license'];
     bounds = Bounds.fromJson(json['bounds']);
     elements = List<Map<String, dynamic>>.from(json['elements']).map((e) {
-      print(e.entries.toList()[2]);
       if (e.entries.toList()[2].key == 'lat') {
-        print('Day la MayNode');
         return MapNode.fromJson(e);
       } else {
-        print('Day la MapWay');
         return MapWay.fromJson(e);
       }
     }).toList();

@@ -16,6 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$MainViewState {
+  LoadingStatus get status => throw _privateConstructorUsedError;
   double get latetitude => throw _privateConstructorUsedError;
   double get longtitude => throw _privateConstructorUsedError;
   double get currentSpeed => throw _privateConstructorUsedError;
@@ -40,7 +41,8 @@ abstract class $MainViewStateCopyWith<$Res> {
           MainViewState value, $Res Function(MainViewState) then) =
       _$MainViewStateCopyWithImpl<$Res>;
   $Res call(
-      {double latetitude,
+      {LoadingStatus status,
+      double latetitude,
       double longtitude,
       double currentSpeed,
       bool openOption,
@@ -65,6 +67,7 @@ class _$MainViewStateCopyWithImpl<$Res>
 
   @override
   $Res call({
+    Object? status = freezed,
     Object? latetitude = freezed,
     Object? longtitude = freezed,
     Object? currentSpeed = freezed,
@@ -79,6 +82,10 @@ class _$MainViewStateCopyWithImpl<$Res>
     Object? searchingObject = freezed,
   }) {
     return _then(_value.copyWith(
+      status: status == freezed
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as LoadingStatus,
       latetitude: latetitude == freezed
           ? _value.latetitude
           : latetitude // ignore: cast_nullable_to_non_nullable
@@ -139,7 +146,8 @@ abstract class _$MainViewStateCopyWith<$Res>
       __$MainViewStateCopyWithImpl<$Res>;
   @override
   $Res call(
-      {double latetitude,
+      {LoadingStatus status,
+      double latetitude,
       double longtitude,
       double currentSpeed,
       bool openOption,
@@ -166,6 +174,7 @@ class __$MainViewStateCopyWithImpl<$Res>
 
   @override
   $Res call({
+    Object? status = freezed,
     Object? latetitude = freezed,
     Object? longtitude = freezed,
     Object? currentSpeed = freezed,
@@ -180,6 +189,10 @@ class __$MainViewStateCopyWithImpl<$Res>
     Object? searchingObject = freezed,
   }) {
     return _then(_MainViewState(
+      status: status == freezed
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as LoadingStatus,
       latetitude: latetitude == freezed
           ? _value.latetitude
           : latetitude // ignore: cast_nullable_to_non_nullable
@@ -234,7 +247,8 @@ class __$MainViewStateCopyWithImpl<$Res>
 
 class _$_MainViewState implements _MainViewState {
   _$_MainViewState(
-      {this.latetitude = 10.762622,
+      {this.status = LoadingStatus.initial,
+      this.latetitude = 10.762622,
       this.longtitude = 106.660172,
       this.currentSpeed = 0,
       this.openOption = false,
@@ -249,6 +263,9 @@ class _$_MainViewState implements _MainViewState {
       : _listMarker = listMarker,
         _listLatLng = listLatLng;
 
+  @override
+  @JsonKey()
+  final LoadingStatus status;
   @override
   @JsonKey()
   final double latetitude;
@@ -298,7 +315,7 @@ class _$_MainViewState implements _MainViewState {
 
   @override
   String toString() {
-    return 'MainViewState(latetitude: $latetitude, longtitude: $longtitude, currentSpeed: $currentSpeed, openOption: $openOption, openInformation: $openInformation, typeGoing: $typeGoing, listMarker: $listMarker, listLatLng: $listLatLng, directionObject: $directionObject, openWannagoListPoint: $openWannagoListPoint, openStartingListPoint: $openStartingListPoint, searchingObject: $searchingObject)';
+    return 'MainViewState(status: $status, latetitude: $latetitude, longtitude: $longtitude, currentSpeed: $currentSpeed, openOption: $openOption, openInformation: $openInformation, typeGoing: $typeGoing, listMarker: $listMarker, listLatLng: $listLatLng, directionObject: $directionObject, openWannagoListPoint: $openWannagoListPoint, openStartingListPoint: $openStartingListPoint, searchingObject: $searchingObject)';
   }
 
   @override
@@ -306,6 +323,7 @@ class _$_MainViewState implements _MainViewState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _MainViewState &&
+            const DeepCollectionEquality().equals(other.status, status) &&
             const DeepCollectionEquality()
                 .equals(other.latetitude, latetitude) &&
             const DeepCollectionEquality()
@@ -334,6 +352,7 @@ class _$_MainViewState implements _MainViewState {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      const DeepCollectionEquality().hash(status),
       const DeepCollectionEquality().hash(latetitude),
       const DeepCollectionEquality().hash(longtitude),
       const DeepCollectionEquality().hash(currentSpeed),
@@ -355,7 +374,8 @@ class _$_MainViewState implements _MainViewState {
 
 abstract class _MainViewState implements MainViewState {
   factory _MainViewState(
-      {final double latetitude,
+      {final LoadingStatus status,
+      final double latetitude,
       final double longtitude,
       final double currentSpeed,
       final bool openOption,
@@ -368,6 +388,8 @@ abstract class _MainViewState implements MainViewState {
       final dynamic openStartingListPoint,
       final SearchingObject? searchingObject}) = _$_MainViewState;
 
+  @override
+  LoadingStatus get status => throw _privateConstructorUsedError;
   @override
   double get latetitude => throw _privateConstructorUsedError;
   @override

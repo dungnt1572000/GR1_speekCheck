@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:doan1/constant/accessTokenTest.dart';
+import 'package:doan1/constant/access_token_test.dart';
+import 'package:doan1/constant/all_of_enum.dart';
 import 'package:doan1/main_view_state.dart';
 import 'package:doan1/src/direction_service/api_direction_client.dart';
 import 'package:doan1/src/searching_service/api_search_client.dart';
@@ -15,7 +16,7 @@ class MainViewModel extends StateNotifier<MainViewState> {
   }
 
   void updateCurrentSpeed(double speed) {
-    state = state.copyWith(currentSpeed: speed*3.6);
+    state = state.copyWith(currentSpeed: speed * 3.6);
   }
 
   void openInformation(bool value) {
@@ -38,27 +39,10 @@ class MainViewModel extends StateNotifier<MainViewState> {
     state = state.copyWith(typeGoing: value);
   }
 
-  void addMarker({required Marker marker, int? position}) async {
-    if (state.listMarker.length < 2) {
-      if (position != null) {
-        state = state.copyWith(
-          listMarker: [
-            for (int i = 0; i < state.listMarker.length; i++)
-              if (i == position) marker,
-            ...state.listMarker
-          ],
-        );
-      } else {
-        state = state.copyWith(listMarker: [...state.listMarker, marker]);
-      }
-    } else {
-      var list = state.listMarker.take(2).toList();
-      print(list);
-     state = state.copyWith(
-       listMarker: list
-     );
-    }
-
+  void addMarker({
+    required Marker marker,
+  }) {
+    state = state.copyWith(listMarker: [...state.listMarker, marker]);
     Logger().e(state.listMarker.length);
   }
 
@@ -67,28 +51,34 @@ class MainViewModel extends StateNotifier<MainViewState> {
         state.copyWith(listMarker: [], listLatLng: [], openInformation: false);
   }
 
-  Future<bool> getDirectionObjDriving(String distance) async {
+  Future<void> getDirectionObjDriving(String distance) async {
     try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
       DirectionsClient(Dio())
           .getDirectionDriving(
               distance, accessToken, 'maxspeed', 'geojson', 'full')
-          .then((value) {
-        state = state.copyWith(
-            openInformation: true,
-            directionObject: value,
-            listLatLng: value.routes[0].geometry.coordinates
-                .map((e) => LatLng(e[1], e[0]))
-                .toList());
-      });
-      return true;
+          .then(
+        (value) {
+          state = state.copyWith(
+              openInformation: true,
+              directionObject: value,
+              listLatLng: value.routes[0].geometry.coordinates
+                  .map(
+                    (e) => LatLng(e[1], e[0]),
+                  )
+                  .toList());
+        },
+      );
+      state = state.copyWith(status: LoadingStatus.success);
     } on Exception catch (err) {
+      state = state.copyWith(status: LoadingStatus.error);
       Logger().e(err.toString());
-      return false;
     }
   }
 
-  Future<bool> getDirectionObjWalking(String distance) async {
+  Future getDirectionObjWalking(String distance) async {
     try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
       DirectionsClient(Dio())
           .getDirectionWalking(
               distance, accessToken, 'maxspeed', 'geojson', 'full')
@@ -99,10 +89,10 @@ class MainViewModel extends StateNotifier<MainViewState> {
                 .map((e) => LatLng(e[1], e[0]))
                 .toList());
       });
-      return true;
+      state = state.copyWith(status: LoadingStatus.success);
     } on Exception catch (err) {
       Logger().e(err.toString());
-      return false;
+      state = state.copyWith(status: LoadingStatus.error);
     }
   }
 
@@ -110,14 +100,19 @@ class MainViewModel extends StateNotifier<MainViewState> {
     state = state.copyWith(listLatLng: []);
   }
 
-  void getSearchingObject(String location) async {
-    SearchingClient(Dio())
-        .fetchToGetSearchingObject(
-          location,
-          accessToken,
-        )
-        .then(
-          (value) => state = state.copyWith(searchingObject: value),
-        );
+  Future getSearchingObject(String location) async {
+    try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
+      SearchingClient(Dio())
+          .fetchToGetSearchingObject(
+            location,
+            accessToken,
+          )
+          .then(
+            (value) => state = state.copyWith(searchingObject: value),
+          );
+    } catch (error) {
+      state = state.copyWith(status: LoadingStatus.error);
+    }
   }
 }
