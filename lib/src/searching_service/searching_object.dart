@@ -2,7 +2,6 @@
 //
 //     final searchingObject = searchingObjectFromJson(jsonString);
 
-import 'package:meta/meta.dart';
 import 'dart:convert';
 
 SearchingObject searchingObjectFromJson(String str) => SearchingObject.fromJson(json.decode(str));

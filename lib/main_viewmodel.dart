@@ -1,141 +1,118 @@
 import 'package:dio/dio.dart';
-import 'package:doan1/constant/accessTokenTest.dart';
-import 'package:doan1/main.dart';
-import 'package:doan1/src/apicalling/api_client.dart';
-import 'package:doan1/src/apicalling/node.dart';
+import 'package:doan1/constant/access_token_test.dart';
+import 'package:doan1/constant/all_of_enum.dart';
+import 'package:doan1/main_view_state.dart';
 import 'package:doan1/src/direction_service/api_direction_client.dart';
-import 'package:doan1/src/direction_service/direction_object.dart';
+import 'package:doan1/src/searching_service/api_search_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:logger/logger.dart';
 
-final latetitudeProvider = StateProvider(
-  (ref) => 10.762622,
-);
+class MainViewModel extends StateNotifier<MainViewState> {
+  MainViewModel(MainViewState state) : super(state);
 
-final longtitudeProvider = StateProvider(
-  (ref) => 106.660172,
-);
-final speedProvider = StateProvider(
-  (ref) => 0.0,
-);
-final openCloseMenuProvider = StateProvider(
-  (ref) => true,
-);
-final zoomProvider = StateProvider(
-  (ref) => 13,
-);
-
-final findOptionProvider = StateProvider(
-  (ref) => false,
-);
-final openDraggableInforProvider = StateProvider((ref) => false);
-
-final openInformationProvider = StateProvider(
-  (ref) => false,
-);
-
-class NodeStateNotifier extends StateNotifier<Node> {
-  NodeStateNotifier(state) : super(state);
-
-  void getNote(String coordinate) async {
-    state = await RestClient(Dio()).fetchToGetNotes(
-        'Basic ZHVuZ3BybzE1NzJrQGdtYWlsLmNvbTpuZ3V5ZW50YW5kdW5ncHJvMTU3MjAwMA==',
-        coordinate);
+  void updateLatLong(double late, double long) {
+    state = state.copyWith(latetitude: late, longtitude: long);
   }
-}
 
-final noteProvider = StateNotifierProvider<NodeStateNotifier, Node>(
-  (ref) => NodeStateNotifier(Node(
-      attribution: '',
-      copyright: '',
-      generator: '',
-      license: '',
-      version: '',
-      bounds: Bounds(minlat: 0.0, minlon: 0.0, maxlat: 0.0, maxlon: 0.0),
-      elements: [])),
-);
+  void updateCurrentSpeed(double speed) {
+    state = state.copyWith(currentSpeed: speed * 3.6);
+  }
 
-final markerNodeProvider = Provider<List<MapNode>>(
-  (ref) {
-    var listAll = ref.watch(noteProvider);
-    var myList = listAll.elements.whereType<MapNode>().toList();
-    return myList;
-  },
-);
+  void openInformation(bool value) {
+    state = state.copyWith(openInformation: value);
+  }
 
-final markerWayProvider = Provider<List<MapWay>>(
-  (ref) {
-    var listAll = ref.watch(noteProvider);
-    var myList = listAll.elements.whereType<MapWay>().toList();
-    return myList;
-  },
-);
-final typeGoingProvider = StateProvider(
-  (ref) => 'Driving',
-);
+  void openOption(bool value) {
+    state = state.copyWith(openOption: value);
+  }
 
-class MarkerNotifier extends StateNotifier<List<Marker>> {
-  MarkerNotifier(List<Marker> state) : super(state);
+  void openWannago(bool value) {
+    state = state.copyWith(openWannagoListPoint: value);
+  }
 
-  void addMarker(Marker marker) {
-    if (state.length > 2) {
-      state = [];
+  void openStarting(bool value) {
+    state = state.copyWith(openStartingListPoint: value);
+  }
+
+  void changeTypeGoing(String value) {
+    state = state.copyWith(typeGoing: value);
+  }
+
+  void addMarker({
+    required Marker marker,
+  }) {
+    state = state.copyWith(listMarker: [...state.listMarker, marker]);
+    Logger().e(state.listMarker.length);
+  }
+
+  void deleteAllMarkerandReset() {
+    state =
+        state.copyWith(listMarker: [], listLatLng: [], openInformation: false);
+  }
+
+  Future<void> getDirectionObjDriving(String distance) async {
+    try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
+      DirectionsClient(Dio())
+          .getDirectionDriving(
+              distance, accessToken, 'maxspeed', 'geojson', 'full')
+          .then(
+        (value) {
+          state = state.copyWith(
+              openInformation: true,
+              directionObject: value,
+              listLatLng: value.routes[0].geometry.coordinates
+                  .map(
+                    (e) => LatLng(e[1], e[0]),
+                  )
+                  .toList());
+        },
+      );
+      state = state.copyWith(status: LoadingStatus.success);
+    } on Exception catch (err) {
+      state = state.copyWith(status: LoadingStatus.error);
+      Logger().e(err.toString());
     }
-    state = [...state, marker];
   }
 
-  void addAllMarker(List<Marker> listMarker) {
-    state = listMarker;
+  Future getDirectionObjWalking(String distance) async {
+    try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
+      DirectionsClient(Dio())
+          .getDirectionWalking(
+              distance, accessToken, 'maxspeed', 'geojson', 'full')
+          .then((value) {
+        state = state.copyWith(
+            directionObject: value,
+            listLatLng: value.routes[0].geometry.coordinates
+                .map((e) => LatLng(e[1], e[0]))
+                .toList());
+      });
+      state = state.copyWith(status: LoadingStatus.success);
+    } on Exception catch (err) {
+      Logger().e(err.toString());
+      state = state.copyWith(status: LoadingStatus.error);
+    }
   }
 
-  void deleteMarker(LatLng latLng) {
-    state = state
-        .where((element) =>
-            element.position.longitude != latLng.longitude &&
-            element.position.latitude != latLng.latitude)
-        .toList();
+  void deleteListLatLng() {
+    state = state.copyWith(listLatLng: []);
   }
 
-  void deleteAllMarker() {
-    state = [];
-  }
-}
-
-final markerProvider = StateNotifierProvider<MarkerNotifier, List<Marker>>(
-  (ref) {
-    return MarkerNotifier([]);
-  },
-);
-
-class DirectionNotifier extends StateNotifier<DirectionObject> {
-  DirectionNotifier(DirectionObject state) : super(state);
-
-  void getDirectionObjDriving(String distance) async {
-    DirectionsClient(Dio())
-        .getDirectionDriving(
-            distance, accessToken, 'maxspeed', 'geojson', 'full')
-        .then((value) {
-      myListLatLng = value.routes[0].geometry.coordinates
-          .map((e) => LatLng(e[1], e[0]))
-          .toList();
-      state = value;
-    });
-  }
-
-  void getDirectionObjWalking(String distance) async {
-    DirectionsClient(Dio())
-        .getDirectionWalking(
-            distance, accessToken, 'maxspeed', 'geojson', 'full')
-        .then((value) {
-      myListLatLng = value.routes[0].geometry.coordinates
-          .map((e) => LatLng(e[1], e[0]))
-          .toList();
-      state = value;
-    });
+  Future getSearchingObject(String location) async {
+    try {
+      state = state.copyWith(status: LoadingStatus.inProcess);
+      SearchingClient(Dio())
+          .fetchToGetSearchingObject(
+            location,
+            accessToken,
+          )
+          .then(
+            (value) => state = state.copyWith(searchingObject: value),
+          );
+    } catch (error) {
+      state = state.copyWith(status: LoadingStatus.error);
+    }
   }
 }
-
-final directionsProvider =
-    StateNotifierProvider<DirectionNotifier, DirectionObject>((ref) =>
-        DirectionNotifier(
-            DirectionObject(uuid: '', waypoints: [], routes: [], code: '')));
