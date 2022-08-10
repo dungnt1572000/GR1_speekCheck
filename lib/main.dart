@@ -75,53 +75,63 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
     List<LatLng> myListLatLng = state.listLatLng;
     double latitude = state.latetitude;
     double longtitude = state.longtitude;
-    int sml = 0;
-    var arrSpeed = directionsObject!.routes[0].legs[0].annotation.maxspeed;
-    for (int i = 0; i < arrSpeed.length; i++) {
-      if (arrSpeed[i].unknown == true) {
-        arrSpeed.insert(
-          i,
-          Maxspeed(
-            speed: 40,
-            unit: 'km/h',
-            unknown: null,
-          ),
-        );
-        arrSpeed.removeAt(i + 1);
+    int? sml = 0;
+    var arrSpeed = directionsObject?.routes[0].legs[0].annotation.maxspeed;
+    if (arrSpeed == null) {
+      return 40;
+    } else {
+      for (int i = 0; i < arrSpeed.length; i++) {
+        if (arrSpeed[i].unknown == true) {
+          arrSpeed.insert(
+            i,
+            Maxspeed(
+              speed: 40,
+              unit: 'km/h',
+              unknown: null,
+            ),
+          );
+          arrSpeed.removeAt(i + 1);
+        }
+      }
+      if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
+          myListLatLng[0].latitude < myListLatLng[1].latitude) {
+        sml = directionsObject?.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude <= element[1] && longtitude < element[0]);
+        Logger().v(sml);
+      }
+      // phia dong nam
+      if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
+          myListLatLng[0].latitude > myListLatLng[1].latitude) {
+        sml = directionsObject?.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude <= element[0]);
+        Logger().v(sml);
+      }
+      // phia tay bac
+      if (myListLatLng[0].longitude > myListLatLng[1].longitude &&
+          myListLatLng[0].latitude < myListLatLng[1].latitude) {
+        //
+        sml = directionsObject?.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude < element[0]);
+        Logger().v(sml);
+      }
+      // tay nam
+      else {
+        sml = directionsObject?.routes[0].geometry.coordinates.indexWhere(
+            (element) => latitude >= element[1] && longtitude >= element[0]);
+        Logger().v(sml);
+      }
+      if (sml == null) {
+        return 40;
+      } else {
+        if (sml < 0) {
+          return 40;
+        } else {
+          return arrSpeed[sml].speed;
+        }
       }
     }
+
     // di ve dong bac
-    if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
-        myListLatLng[0].latitude < myListLatLng[1].latitude) {
-      sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
-          (element) => latitude <= element[1] && longtitude < element[0]);
-      Logger().v(sml);
-    }
-    // phia dong nam
-    if (myListLatLng[0].longitude < myListLatLng[1].longitude &&
-        myListLatLng[0].latitude > myListLatLng[1].latitude) {
-      sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
-          (element) => latitude >= element[1] && longtitude <= element[0]);
-      Logger().v(sml);
-    }
-    // phia tay bac
-    if (myListLatLng[0].longitude > myListLatLng[1].longitude &&
-        myListLatLng[0].latitude < myListLatLng[1].latitude) {
-      //
-      sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
-          (element) => latitude >= element[1] && longtitude < element[0]);
-      Logger().v(sml);
-    }
-    // tay nam
-    else {
-      sml = directionsObject.routes[0].geometry.coordinates.indexWhere(
-          (element) => latitude >= element[1] && longtitude >= element[0]);
-      Logger().v(sml);
-    }
-    if (sml < 0) {
-      return 40;
-    }
-    return arrSpeed[sml].speed;
   }
 
   @override
@@ -180,275 +190,294 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
       body: AppLoading(
         status: state.status,
         child: SafeArea(
-          child: Stack(
-            fit: StackFit.loose,
-            children: [
-              GoogleMap(
-                myLocationButtonEnabled: false,
-                myLocationEnabled: true,
-                initialCameraPosition: CameraPosition(
-                    target: LatLng(latitude, longtitude), zoom: 11.5),
-                zoomGesturesEnabled: true,
-                zoomControlsEnabled: true,
-                markers: Set.of(_marker),
-                onMapCreated: (GoogleMapController controller) {
-                  return _controller.complete(controller);
-                },
-                onTap: _handleTap,
-                polylines: {
-                  Polyline(
-                    color: Colors.blueAccent,
-                    width: 3,
-                    polylineId: const PolylineId('halo'),
-                    points: myListLatLng,
-                  )
-                },
-              ),
-              AnimatedCrossFade(
-                firstChild: _buildSearchingBar(state),
-                secondChild: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(
-                        side: BorderSide(color: Colors.blue),
-                      ),
-                      primary: Colors.white),
-                  onPressed: () {
-                    _viewmodel.openOption(!state.openOption);
-                  },
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.blue,
-                  ),
-                ),
-                crossFadeState: uIcheckfindProvider
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                duration: const Duration(milliseconds: 500),
-              ),
-              openInfor == true && myListLatLng.isNotEmpty
-                  ? Positioned(
-                      right: 8,
-                      top: 315,
-                      child: SizedBox(
-                        width: 125,
-                        child: Column(
-                          children: [
-                            Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              elevation: 12,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    const Icon(
-                                      Icons.speed,
-                                      color: Colors.lightBlue,
-                                    ),
-                                    Text(
-                                        state.currentSpeed.toStringAsFixed(2) +
-                                            'km/h',
-                                        style: const TextStyle(
-                                            color: Colors.lightBlue))
-                                  ],
-                                ),
-                              ),
+          child: state.currentSpeed < (_getCurrentSpeed(state) ?? 40.1)
+              ? Stack(
+                  fit: StackFit.loose,
+                  children: [
+                    GoogleMap(
+                      myLocationButtonEnabled: false,
+                      myLocationEnabled: true,
+                      initialCameraPosition: CameraPosition(
+                          target: LatLng(latitude, longtitude), zoom: 11.5),
+                      zoomGesturesEnabled: true,
+                      zoomControlsEnabled: true,
+                      markers: Set.of(_marker),
+                      onMapCreated: (GoogleMapController controller) {
+                        return _controller.complete(controller);
+                      },
+                      onTap: _handleTap,
+                      polylines: {
+                        Polyline(
+                          color: Colors.blueAccent,
+                          width: 3,
+                          polylineId: const PolylineId('halo'),
+                          points: myListLatLng,
+                        )
+                      },
+                    ),
+                    AnimatedCrossFade(
+                      firstChild: _buildSearchingBar(state),
+                      secondChild: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(
+                              side: BorderSide(color: Colors.blue),
                             ),
-                            Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              elevation: 12,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    const Icon(
-                                      Icons.access_time_rounded,
-                                      color: Colors.lightBlue,
-                                    ),
-                                    Text(
-                                      state.directionObject == null
-                                          ? 'Unknown'
-                                          : '${(state.directionObject!.routes[0].duration / 60).toStringAsFixed(2)} min',
-                                      style: const TextStyle(
-                                          color: Colors.lightBlue),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                            primary: Colors.white),
+                        onPressed: () {
+                          _viewmodel.openOption(!state.openOption);
+                        },
+                        child: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.blue,
                         ),
                       ),
-                    )
-                  : const SizedBox(),
-              if (openInfor == true && myListLatLng.isNotEmpty)
-                DraggableScrollableSheet(
-                  initialChildSize: 0.4,
-                  maxChildSize: 0.5,
-                  minChildSize: 0.03,
-                  builder: (context, scrollController) => ListView(
-                    controller: scrollController,
-                    children: [
-                      Wrap(
-                        direction: Axis.horizontal,
-                        spacing: 1,
-                        children: [
-                          Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 15,
+                      crossFadeState: uIcheckfindProvider
+                          ? CrossFadeState.showFirst
+                          : CrossFadeState.showSecond,
+                      duration: const Duration(milliseconds: 500),
+                    ),
+                    openInfor == true && myListLatLng.isNotEmpty
+                        ? Positioned(
+                            right: 8,
+                            top: 315,
                             child: SizedBox(
-                              width: 105,
-                              child: TextButton(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.directions_run_rounded),
-                                    SizedBox(
-                                      width: 5,
+                              width: 125,
+                              child: Column(
+                                children: [
+                                  Card(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    elevation: 12,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          const Icon(
+                                            Icons.speed,
+                                            color: Colors.lightBlue,
+                                          ),
+                                          Text(
+                                              state.currentSpeed
+                                                      .toStringAsFixed(2) +
+                                                  'km/h',
+                                              style: const TextStyle(
+                                                  color: Colors.lightBlue))
+                                        ],
+                                      ),
                                     ),
-                                    Text(
-                                      'Walking',
-                                      style: TextStyle(fontSize: 18),
+                                  ),
+                                  Card(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    elevation: 12,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          const Icon(
+                                            Icons.access_time_rounded,
+                                            color: Colors.lightBlue,
+                                          ),
+                                          Text(
+                                            state.directionObject == null
+                                                ? 'Unknown'
+                                                : '${(state.directionObject!.routes[0].duration / 60).toStringAsFixed(2)} min',
+                                            style: const TextStyle(
+                                                color: Colors.lightBlue),
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
-                                onPressed: () {
-                                  _viewmodel.changeTypeGoing('Run');
-                                  _viewmodel.getDirectionObjWalking(distance);
-                                },
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 15,
-                            child: SizedBox(
-                              width: 105,
-                              child: TextButton(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.directions_car_rounded),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Text(
-                                      'Driving',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                  ],
-                                ),
-                                onPressed: () {
-                                  _viewmodel.changeTypeGoing('Driving');
-                                  _viewmodel.getDirectionObjDriving(distance);
-                                },
-                              ),
-                            ),
-                          ),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 15,
-                            child: SizedBox(
-                              width: 105,
-                              child: TextButton(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.directions_bike_rounded),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Text(
-                                      'Bike',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
-                                  ],
-                                ),
-                                onPressed: () {
-                                  _viewmodel.changeTypeGoing('Driving');
-                                  _viewmodel.getDirectionObjDriving(distance);
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                        decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(18),
-                              topRight: Radius.circular(18),
-                            ),
-                            color: Colors.white),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisSize: MainAxisSize.max,
+                          )
+                        : const SizedBox(),
+                    if (openInfor == true && myListLatLng.isNotEmpty)
+                      DraggableScrollableSheet(
+                        initialChildSize: 0.4,
+                        maxChildSize: 0.5,
+                        minChildSize: 0.03,
+                        builder: (context, scrollController) => ListView(
+                          controller: scrollController,
                           children: [
-                            Text(
-                              'Kind of Driving: $typeGoing',
-                              style: const TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.normal),
+                            Wrap(
+                              direction: Axis.horizontal,
+                              spacing: 1,
+                              children: [
+                                Card(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 15,
+                                  child: SizedBox(
+                                    width: 105,
+                                    child: TextButton(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.directions_run_rounded),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            'Walking',
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        _viewmodel.changeTypeGoing('Run');
+                                        _viewmodel
+                                            .getDirectionObjWalking(distance);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Card(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 15,
+                                  child: SizedBox(
+                                    width: 105,
+                                    child: TextButton(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.directions_car_rounded),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            'Driving',
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        _viewmodel.changeTypeGoing('Driving');
+                                        _viewmodel
+                                            .getDirectionObjDriving(distance);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Card(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 15,
+                                  child: SizedBox(
+                                    width: 105,
+                                    child: TextButton(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.directions_bike_rounded),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            'Bike',
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        _viewmodel.changeTypeGoing('Driving');
+                                        _viewmodel
+                                            .getDirectionObjDriving(distance);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Divider(),
-                            Text(
-                              'Current Speed: ${curSpeed.toStringAsFixed(2)} km/h',
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 12),
+                              decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(18),
+                                    topRight: Radius.circular(18),
+                                  ),
+                                  color: Colors.white),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Text(
+                                    'Kind of Driving: $typeGoing',
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                  const Divider(),
+                                  Text(
+                                    'Current Speed: ${curSpeed.toStringAsFixed(2)} km/h',
+                                    style: const TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const Divider(),
+                                  Text(
+                                    'Starting point: ${directionsObject!.waypoints[0].name}',
+                                    style: const TextStyle(
+                                        color: Colors.lightBlue, fontSize: 20),
+                                  ),
+                                  Text(
+                                    'Ends point: ${directionsObject.waypoints[1].name}',
+                                    style: const TextStyle(
+                                        color: Colors.lightBlue, fontSize: 20),
+                                  ),
+                                  Text(
+                                    'Abroad: ${directionsObject.routes[0].countryCrossed}',
+                                    style: const TextStyle(
+                                        color: Colors.lightBlue, fontSize: 17),
+                                  ),
+                                  const Divider(height: 12),
+                                  Text(
+                                    'Accept Current Speed in this Way: ${_getCurrentSpeed(state) ?? 40}km/h',
+                                    style: const TextStyle(
+                                        color: Colors.lightBlue, fontSize: 20),
+                                  )
+                                ],
                               ),
-                            ),
-                            const Divider(),
-                            Text(
-                              'Starting point: ${directionsObject!.waypoints[0].name}',
-                              style: const TextStyle(
-                                  color: Colors.lightBlue, fontSize: 20),
-                            ),
-                            Text(
-                              'Ends point: ${directionsObject.waypoints[1].name}',
-                              style: const TextStyle(
-                                  color: Colors.lightBlue, fontSize: 20),
-                            ),
-                            Text(
-                              'Abroad: ${directionsObject.routes[0].countryCrossed}',
-                              style: const TextStyle(
-                                  color: Colors.lightBlue, fontSize: 17),
-                            ),
-                            const Divider(height: 12),
-                            Text(
-                              'Accept Current Speed in this Way: ${_getCurrentSpeed(state) ?? 40}km/h',
-                              style: const TextStyle(
-                                  color: Colors.lightBlue, fontSize: 20),
                             )
                           ],
                         ),
                       )
-                    ],
-                  ),
+                    else
+                      const SizedBox()
+                  ],
                 )
-              else
-                const SizedBox()
-            ],
-          ),
+              : const Center(
+                  child: Text(
+                    'Nguy Hiem',
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 30),
+                  ),
+                ),
         ),
       ),
     );
